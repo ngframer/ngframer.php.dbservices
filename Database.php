@@ -71,29 +71,31 @@ class Database
     {
         $configFile = ROOT . '/config/database.php';
         if (!file_exists($configFile)) {
-            $this->throwError("NGFramerPHPDbService/Database.php/checkConfigFile() :: Missing Connection Configuration File. Please check /config/database.php.");
+            $this->throwError("NGFramerPHPDbService/Database.php/validateConfigFile() :: Missing Connection Configuration File. Please check /config/database.php.");
         }
         else require_once $configFile;
     }
 
 
-    public function prepare(string $query, $options = []): ?static
+    public function prepare(string $queryStatement = null, $options = []): ?static
     {
         if (!$this->connection) $this->throwError("ngframerphp/core/Database.php/prepare() :: No database connection to prepare the statement.");
-        else $this->queryStatement = $this->connection->prepare($query, $options); return $this;
+        elseif (empty($queryStatement)) $this->throwError("ngframerphp/core/Database.php/prepare() :: No query to prepare.");
+        else $this->queryStatement = $this->connection->prepare($queryStatement, $options);
+        return $this;
     }
 
 
     public function bindParam(string|array ...$args): ?static
     {
-        // If queryStatement is null or if queryStatement is false, then throw an exception.
-        if ($this->queryStatement == null || !$this->queryStatement) {
-            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No prepared statement (queryStatement) to bind parameters.");
+        // If queryStatement is false, then throw an exception.
+        if (!$this->queryStatement) {
+            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No queryStatement to bind parameters.");
         }
 
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No parameters to bind to the statement (queryStatement).");
+            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No parameters to bind to queryStatement.");
         }
 
         // If some parameters are sent to bind to the statement.
@@ -122,10 +124,20 @@ class Database
     }
 
 
-    public function execute(): static
+    public function execute(string $queryStatement = null): static
     {
-        if (!$this->queryStatement) $this->throwError("ngframerphp/core/Database.php/bindParam() :: No prepared statement to execute.");
-        $this->queryExecutionStatus = $this->queryStatement->execute();
+        // If queryStatement is not null, then execute the queryStatement.
+        if ($queryStatement !== null && $this->queryStatement === null) {
+            // query() function prepares and executes the queryStatement, and returns pdoStatement|false.
+            $this->queryStatement = $this->connection->query($queryStatement);
+            $this->queryExecutionStatus = ($this->queryStatement !== false) ? true : false;
+        }
+        // If queryStatement is true, then execute the queryStatement.
+        else if ($queryStatement === null && $this->queryStatement !== null) {
+            $this->queryExecutionStatus = $this->queryStatement->execute();
+        }
+        // If queryStatement is false, throw an error.
+        else $this->throwError("ngframerphp/core/Database.php/bindParam() :: Invalid or no queryStatement to execute.");
         return $this;
     }
 
@@ -160,15 +172,15 @@ class Database
 
     public function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {
-        if (!$this->queryExecutionStatus) $this->throwError("ngframerphp/core/Database.php/fetch() :: No executed statement to fetch results");
-        return $this->queryStatement->fetch($fetchStyle);
+        if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
+        else $this->throwError("ngframerphp/core/Database.php/fetch() :: No executed statement to fetch results");
     }
 
 
     public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
     {
-        if (!$this->queryExecutionStatus) $this->throwError("ngframerphp/core/Database.php/fetchAll() :: No executed statement to fetch results");
-        return $this->queryStatement->fetchAll($fetchStyle);
+        if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
+        else $this->throwError("ngframerphp/core/Database.php/fetchAll() :: No executed statement to fetch results");
     }
 
     public function close(): void

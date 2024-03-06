@@ -80,45 +80,75 @@ class Database
         return $this;
     }
 
-
     public function bindParams(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
             $this->throwError("ngframerphp/core/Database.php/bindParams() :: No queryStatement to bind parameters.");
         }
-
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
             $this->throwError("ngframerphp/core/Database.php/bindParams() :: No parameters to bind to queryStatement.");
         }
-
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                $param = $args['param'] ?? $args[0];
+                $name = $args['name'] ?? $args[0];
                 $value = $args['value'] ?? $args[1];
                 $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-                $this->bindParam($param, $value, $type);
+                $this->bindParam($name, $value, $type);
             }
         }
-
         // If all the elements of thr array ($args) are not array/s.
         else {
-            $param = $args['param'] ?? $args[0];
+            $name = $args['name'] ?? $args[0];
             $value = $args['value'] ?? $args[1];
             $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-            $this->queryStatement->bindParam($param, $value, $type);
+            $this->queryStatement->bindParam($name, $value, $type);
         }
-
         // Return for function chaining.
         return $this;
     }
 
-
-    public function bindParam($param, &$value, $type = PDO::PARAM_STR): static
+    public function bindParam($name, &$value, $type = PDO::PARAM_STR): static
     {
-        $this->queryStatement->bindParam(":" . $param, $value, $type);
+        $this->queryStatement->bindParam(":" . $name, $value, $type);
+        return $this;
+    }
+
+    public function bindValues(array &$args): ?static
+    {
+        // If queryStatement is false, then throw an exception.
+        if (!$this->queryStatement) {
+            $this->throwError("ngframerphp/core/Database.php/bindParams() :: No queryStatement to bind parameters.");
+        }
+        // If there are no parameters to bind to the statement.
+        if (count($args) === 0) {
+            $this->throwError("ngframerphp/core/Database.php/bindParams() :: No parameters to bind to queryStatement.");
+        }
+        // If all elements of the array are arrays, then run bindParam function with arg.
+        if ($this->areAllElementsArray($args)) {
+            foreach ($args as $arg) {
+                $name = $args['name'] ?? $args[0];
+                $value = $args['value'] ?? $args[1];
+                $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+                $this->bindValue($name, $value, $type);
+            }
+        }
+        // If all the elements of thr array ($args) are not array/s.
+        else {
+            $name = $args['name'] ?? $args[0];
+            $value = $args['value'] ?? $args[1];
+            $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+            $this->queryStatement->bindValue($name, $value, $type);
+        }
+        // Return for function chaining.
+        return $this;
+    }
+
+    public function bindValue($name, $value, $type = PDO::PARAM_STR): static
+    {
+        $this->queryStatement->bindParam(":".$name, $value, $type);
         return $this;
     }
 

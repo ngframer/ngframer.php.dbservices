@@ -49,21 +49,6 @@ class Database
         }
     }
 
-
-    private function throwError(string $message): void
-    {
-        $this->logError($message);
-        Throw new PDOException($message);
-    }
-
-
-    private function logError(string $message): void
-    {
-        $logFile = ROOT . '/logs/database_errors.log';
-        error_log(date("[Y-m-d H:i:s]") . " " . $message . PHP_EOL, 3, $logFile);
-    }
-
-
     /**
      * @throws Exception
      */
@@ -72,10 +57,20 @@ class Database
         $configFile = ROOT . '/config/database.php';
         if (!file_exists($configFile)) {
             $this->throwError("NGFramerPHPDbService/Database.php/validateConfigFile() :: Missing Connection Configuration File. Please check /config/database.php.");
-        }
-        else require_once $configFile;
+        } else require_once $configFile;
     }
 
+    private function throwError(string $message): void
+    {
+        $this->logError($message);
+        throw new PDOException($message);
+    }
+
+    private function logError(string $message): void
+    {
+        $logFile = ROOT . '/logs/database_errors.log';
+        error_log(date("[Y-m-d H:i:s]") . " " . $message . PHP_EOL, 3, $logFile);
+    }
 
     public function prepare(string $queryStatement = null, $options = []): ?static
     {
@@ -86,43 +81,54 @@ class Database
     }
 
 
-    public function bindParam(string|array ...$args): ?static
+    public function bindParams(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No queryStatement to bind parameters.");
+            $this->throwError("ngframerphp/core/Database.php/bindParams() :: No queryStatement to bind parameters.");
         }
 
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            $this->throwError("ngframerphp/core/Database.php/bindParam() :: No parameters to bind to queryStatement.");
+            $this->throwError("ngframerphp/core/Database.php/bindParams() :: No parameters to bind to queryStatement.");
         }
 
-        // If some parameters are sent to bind to the statement.
-        else{
+        // If all elements of the array are arrays, then run bindParam function with arg.
+        if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                // For string based conditions.
-                if ((count($args) === 2 || count($args) === 3 ) && (!is_array($args[0]) && !is_array($args[1]) && !is_array($args[2]))) $this->bindValues($args);
-                // For array based conditions.
-                else if (is_array($arg)) $this->bindValues($arg);
-                // If parameters are not in format.
-                else $this->throwError("ngframerphp/core/Database.php/bindParam() :: Invalid parameter format for bindings.");
+                $param = $args['param'] ?? $args[0];
+                $value = $args['value'] ?? $args[1];
+                $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+                $this->bindParam($param, $value, $type);
             }
-            return $this;
         }
+
+        // If all the elements of thr array ($args) are not array/s.
+        else {
+            $param = $args['param'] ?? $args[0];
+            $value = $args['value'] ?? $args[1];
+            $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+            $this->queryStatement->bindParam($param, $value, $type);
+        }
+
+        // Return for function chaining.
+        return $this;
     }
 
 
-    private function bindValues(array $args): void
+    public function bindParam($param, &$value, $type = PDO::PARAM_STR): static
     {
-        if (is_string($args[0]) && !is_array($args[1]) && ((count($args) === 3)) || (count($args) === 2)) {
-            // $args[0] is the name of the parameter.
-            // $args[1] is the value of the parameter.
-            // $args[2] is the data type of the parameter.
-            $this->queryStatement->bindParam(":".$args[0], $args[1], $args[2] ?? PDO::PARAM_STR);
-        } else $this->throwError("ngframerphp/core/Database.php/bindValues() :: Invalid parameter format for binding.");
+        $this->queryStatement->bindParam(":" . $param, $value, $type);
+        return $this;
     }
 
+    private function areAllElementsArray(array $args): bool
+    {
+        foreach ($args as $arg) {
+            if (!is_array($arg)) return false;
+        }
+        return true;
+    }
 
     public function execute(string $queryStatement = null): static
     {
@@ -131,12 +137,10 @@ class Database
             // query() function prepares and executes the queryStatement, and returns pdoStatement|false.
             $this->queryStatement = $this->connection->query($queryStatement);
             $this->queryExecutionStatus = ($this->queryStatement !== false) ? true : false;
-        }
-        // If queryStatement is true, then execute the queryStatement.
+        } // If queryStatement is true, then execute the queryStatement.
         else if ($queryStatement === null && $this->queryStatement !== null) {
             $this->queryExecutionStatus = $this->queryStatement->execute();
-        }
-        // If queryStatement is false, throw an error.
+        } // If queryStatement is false, throw an error.
         else $this->throwError("ngframerphp/core/Database.php/bindParam() :: Invalid or no queryStatement to execute.");
         return $this;
     }

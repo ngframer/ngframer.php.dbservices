@@ -17,5 +17,7 @@
             "homepage": "https://github.com/neupkishor"
         }
     ],
-    "require": {}
+    "require": {
+      "ext-pdo": "*"
+    }
 }

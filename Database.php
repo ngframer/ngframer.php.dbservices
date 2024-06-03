@@ -209,6 +209,16 @@ class Database
         return $this->connection->lastInsertId();
     }
 
+    public function rowCount(): int
+    {
+        return $this->queryStatement->rowCount();
+    }
+
+    public function affectedRowCount(): int
+    {
+        return $this->rowCount();
+    }
+
 
     public function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {

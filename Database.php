@@ -96,27 +96,27 @@ class Database
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                $name = $arg['name'] ?? $arg[0];
+                $column = $arg['column'] ?? $arg[0];
                 $value = $arg['value'] ?? $arg[1];
                 $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
-                $this->bindParam($name, $value, $type);
+                $this->bindParam($column, $value, $type);
             }
         } // If all the elements of thr array ($args) are not array/s.
         else {
-            $name = $args['name'] ?? $args[0];
+            $column = $args['column'] ?? $args[0];
             $value = $args['value'] ?? $args[1];
             $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-            $this->queryStatement->bindParam($name, $value, $type);
+            $this->queryStatement->bindParam($column, $value, $type);
         }
         // Return for function chaining.
         return $this;
     }
 
 
-    public function bindParam($name, &$value, $type = PDO::PARAM_STR): static
+    public function bindParam($column, &$value, $type = PDO::PARAM_STR): static
     {
-        if (!str_starts_with($name, ":")) $name = ":" . $name;
-        $this->queryStatement->bindParam($name, $value, $type);
+        if (!str_starts_with($column, ":")) $column = ":" . $column;
+        $this->queryStatement->bindParam($column, $value, $type);
         return $this;
     }
 
@@ -134,27 +134,27 @@ class Database
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                $name = $arg['name'] ?? $arg[0];
+                $column = $arg['column'] ?? $arg[0];
                 $value = $arg['value'] ?? $arg[1];
                 $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
-                $this->bindValue($name, $value, $type);
+                $this->bindValue($column, $value, $type);
             }
         } // If all the elements of thr array ($args) are not array/s.
         else {
-            $name = $args['name'] ?? $args[0];
+            $column = $args['column'] ?? $args[0];
             $value = $args['value'] ?? $args[1];
             $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-            $this->queryStatement->bindValue($name, $value, $type);
+            $this->queryStatement->bindValue($column, $value, $type);
         }
         // Return for function chaining.
         return $this;
     }
 
 
-    public function bindValue($name, $value, $type = PDO::PARAM_STR): static
+    public function bindValue($column, $value, $type = PDO::PARAM_STR): static
     {
-        if (!str_starts_with($name, ":")) $name = ":" . $name;
-        $this->queryStatement->bindParam($name, $value, $type);
+        if (!str_starts_with($column, ":")) $column = ":" . $column;
+        $this->queryStatement->bindParam($column, $value, $type);
         return $this;
     }
 

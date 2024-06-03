@@ -96,9 +96,9 @@ class Database
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                $name = $args['name'] ?? $args[0];
-                $value = $args['value'] ?? $args[1];
-                $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+                $name = $arg['name'] ?? $arg[0];
+                $value = $arg['value'] ?? $arg[1];
+                $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
                 $this->bindParam($name, $value, $type);
             }
         } // If all the elements of thr array ($args) are not array/s.
@@ -134,9 +134,9 @@ class Database
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
             foreach ($args as $arg) {
-                $name = $args['name'] ?? $args[0];
-                $value = $args['value'] ?? $args[1];
-                $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
+                $name = $arg['name'] ?? $arg[0];
+                $value = $arg['value'] ?? $arg[1];
+                $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
                 $this->bindValue($name, $value, $type);
             }
         } // If all the elements of thr array ($args) are not array/s.

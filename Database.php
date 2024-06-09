@@ -2,6 +2,8 @@
 
 namespace NGFramer\NGFramerPHPDbService;
 
+use app\config\ApplicationConfig;
+use app\config\DatabaseConfig;
 use PDO;
 use PDOStatement;
 use Throwable;
@@ -42,7 +44,10 @@ class Database
 
         try {
             // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
-            $this->connection = new PDO(DB_DSN, DB_USER, DB_PASS, $pdoAttributes);
+            $db_dsn = DatabaseConfig::get('db_dsn');
+            $db_user = DatabaseConfig::get('db_user');
+            $db_pass = DatabaseConfig::get('db_pass');
+            $this->connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
         } catch (Throwable $th) {
             $this->throwError("Connection to the database was not established. Error Message: " . $th->getMessage());
         }
@@ -54,9 +59,9 @@ class Database
      */
     private function validateConfigFile(): void
     {
-        $configFile = ROOT . '/config/database.php';
+        $configFile = ApplicationConfig::get('root') . '/config/DatabaseConfig.php';
         if (!file_exists($configFile)) {
-            $this->throwError("Missing Connection Configuration File. Please check /config/database.php.");
+            $this->throwError("Missing Connection Configuration File. Please check /config/DatabaseConfig.php.");
         } else require_once $configFile;
     }
 
@@ -70,7 +75,7 @@ class Database
 
     private function logError(string $message): void
     {
-        $logFile = ROOT . '/logs/database_errors.log';
+        $logFile = ApplicationConfig::get('root') . '/logs/database_errors.log';
         error_log(date("[Y-m-d H:i:s]") . " " . $message . PHP_EOL, 3, $logFile);
     }
 

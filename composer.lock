@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "846de524e391035c1d9b7b24b14429d9",
+    "content-hash": "9b024f56f065dbdf33f7e118b7ec38b7",
     "packages": [
         {
             "name": "ngframer/ngframer.php.exceptions",

@@ -1,23 +1,24 @@
 {
-    "name": "ngframer/ngframer.php.dbservice",
-    "description": "Simple yet powerful database layer for PHP.",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "NGFramer\\NGFramerPHPDbService\\": "/"
-        }
-    },
-    "authors": [
-        {
-            "name": "NG Framer",
-            "homepage": "https://github.com/ngframer"
-        },
-        {
-            "name": "Kishor Neupane",
-            "homepage": "https://github.com/neupkishor"
-        }
-    ],
-    "require": {
-      "ext-pdo": "*"
+  "name": "ngframer/ngframer.php.dbservice",
+  "description": "Simple yet powerful database layer for PHP.",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "NGFramer\\NGFramerPHPDbService\\": "/"
     }
+  },
+  "authors": [
+    {
+      "name": "NG Framer",
+      "homepage": "https://github.com/ngframer"
+    },
+    {
+      "name": "Kishor Neupane",
+      "homepage": "https://github.com/neupkishor"
+    }
+  ],
+  "require": {
+    "ext-pdo": "*",
+    "ngframer/ngframer.php.exceptions": "~1.1.1"
+  }
 }

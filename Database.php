@@ -49,7 +49,7 @@ class Database
             $db_pass = DatabaseConfig::get('db_pass');
             $this->connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
         } catch (Throwable $th) {
-            $this->throwError("Connection to the database was not established. Error Message: " . $th->getMessage());
+            throw new PDOException("Connection to the database was not established. Error Message: " . $th->getMessage());
         }
     }
 
@@ -61,28 +61,14 @@ class Database
     {
         $configFile = ApplicationConfig::get('root') . '/config/DatabaseConfig.php';
         if (!file_exists($configFile)) {
-            $this->throwError("Missing Connection Configuration File. Please check /config/DatabaseConfig.php.");
+            throw new PDOException("Missing Connection Configuration File. Please check /config/DatabaseConfig.php.");
         } else require_once $configFile;
-    }
-
-
-    private function throwError(string $message): void
-    {
-        $this->logError($message);
-        throw new PDOException($message);
-    }
-
-
-    private function logError(string $message): void
-    {
-        $logFile = ApplicationConfig::get('root') . '/logs/database_errors.log';
-        error_log(date("[Y-m-d H:i:s]") . " " . $message . PHP_EOL, 3, $logFile);
     }
 
 
     public function prepare(string $queryStatement = null, $options = []): ?static
     {
-        if (empty($queryStatement)) $this->throwError("No / empty query to prepare.");
+        if (empty($queryStatement)) throw new PDOException("No / empty query to prepare.");
         else $this->queryStatement = $this->connection->prepare($queryStatement, $options);
         return $this;
     }
@@ -92,11 +78,11 @@ class Database
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            $this->throwError("No queryStatement to bind parameters to.");
+            throw new PDOException("No queryStatement to bind parameters to.");
         }
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            $this->throwError("No parameters passed to bind to queryStatement.");
+            throw new PDOException("No parameters passed to bind to queryStatement.");
         }
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
@@ -130,11 +116,11 @@ class Database
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            $this->throwError("No queryStatement to bind parameters to.");
+            throw new PDOException("No queryStatement to bind parameters to.");
         }
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            $this->throwError("No parameters passed to bind to queryStatement.");
+            throw new PDOException("No parameters passed to bind to queryStatement.");
         }
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
@@ -178,15 +164,18 @@ class Database
         // If queryStatement is not null, then execute the queryStatement.
         if ($queryStatement !== null && $this->queryStatement === null) {
             // query() function prepares and executes the queryStatement, and returns pdoStatement|false.
-
             $this->queryStatement = $this->connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
-        } // If queryStatement is true, then execute the queryStatement.
+        }
+
+        // If queryStatement is true, then execute the queryStatement.
         else if ($queryStatement === null && $this->queryStatement !== null) {
             $this->queryExecutionStatus = $this->queryStatement->execute();
-        } // If queryStatement is false, throw an error.
-        else $this->throwError("Invalid or no queryStatement to execute.");
+        }
 
+        // If queryStatement is false, throw an error.
+        else throw new PDOException("Invalid or no queryStatement to execute.");
+        // Return the object for function chaining.
         return $this;
     }
 
@@ -214,10 +203,12 @@ class Database
         return $this->connection->lastInsertId();
     }
 
+
     public function rowCount(): int
     {
         return $this->queryStatement->rowCount();
     }
+
 
     public function affectedRowCount(): int
     {
@@ -228,15 +219,16 @@ class Database
     public function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
-        else $this->throwError("No executed statement to fetch results");
+        else throw new PDOException("No executed statement to fetch results");
     }
 
 
     public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
-        else $this->throwError("No executed statement to fetch results");
+        else throw new PDOException("No executed statement to fetch results");
     }
+
 
     public function close(): void
     {

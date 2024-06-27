@@ -13,15 +13,33 @@ use PDOException;
 
 class Database
 {
+    // Singleton instance variable.
+    private static Database|null $instance = null;
+
+    // PDO connection related variable.
     public ?PDO $connection = null;
     private null|bool|PDOStatement $queryStatement = null;
     private bool $queryExecutionStatus = false;
 
 
     /**
+     * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
+     * @return Database. Returns the singleton instance.
+     */
+    public static function getInstance(): static
+    {
+        if (empty(self::$instance)) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+
+    /**
+     * Private constructor to make sure, no more of it's instance can be created.
      * @throws Exception
      */
-    public function __construct()
+    private function __construct()
     {
         $this->connect();
     }

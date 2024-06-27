@@ -14,10 +14,12 @@ use PDOException;
 class Database
 {
     // Singleton instance variable.
-    private static Database|null $instance = null;
+    private static ?Database $instance = null;
+
+    // Using static to hold on the single instance of PDO.
+    private static ?PDO $connection = null;
 
     // PDO connection related variable.
-    public ?PDO $connection = null;
     private null|bool|PDOStatement $queryStatement = null;
     private bool $queryExecutionStatus = false;
 
@@ -26,7 +28,7 @@ class Database
      * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
      * @return Database. Returns the singleton instance.
      */
-    public static function getInstance(): static
+    public static function getInstance(): Database
     {
         if (empty(self::$instance)) {
             self::$instance = new self();
@@ -50,24 +52,27 @@ class Database
      */
     private function connect(): void
     {
-        // Check the configuration file for the database connection.
-        $this->validateConfigFile();
+        // Only create an instance if the connection is not already created.
+        if (empty(self::$connection)) {
+            // Check the configuration file for the database connection.
+            $this->validateConfigFile();
 
-        // Now the main connection.
-        $pdoAttributes = [
-            PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ];
+            // Now the main connection.
+            $pdoAttributes = [
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ];
 
-        try {
-            // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
-            $db_dsn = DatabaseConfig::get('db_dsn');
-            $db_user = DatabaseConfig::get('db_user');
-            $db_pass = DatabaseConfig::get('db_pass');
-            $this->connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
-        } catch (Throwable $th) {
-            throw new PDOException("Connection to the database was not established. Error Message: " . $th->getMessage());
+            try {
+                // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
+                $db_dsn = DatabaseConfig::get('db_dsn');
+                $db_user = DatabaseConfig::get('db_user');
+                $db_pass = DatabaseConfig::get('db_pass');
+                self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
+            } catch (Throwable $th) {
+                throw new PDOException("Connection to the database was not established. Error Message: " . $th->getMessage());
+            }
         }
     }
 
@@ -75,7 +80,8 @@ class Database
     /**
      * @throws Exception
      */
-    private function validateConfigFile(): void
+    private
+    function validateConfigFile(): void
     {
         $configFile = ApplicationConfig::get('root') . '/config/DatabaseConfig.php';
         if (!file_exists($configFile)) {
@@ -84,15 +90,17 @@ class Database
     }
 
 
-    public function prepare(string $queryStatement = null, $options = []): ?static
+    public
+    function prepare(string $queryStatement = null, $options = []): ?static
     {
         if (empty($queryStatement)) throw new PDOException("No / empty query to prepare.");
-        else $this->queryStatement = $this->connection->prepare($queryStatement, $options);
+        else $this->queryStatement = self::$connection->prepare($queryStatement, $options);
         return $this;
     }
 
 
-    public function bindParams(array &$args): ?static
+    public
+    function bindParams(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
@@ -122,7 +130,8 @@ class Database
     }
 
 
-    public function bindParam($column, &$value, $type = PDO::PARAM_STR): static
+    public
+    function bindParam($column, &$value, $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -130,7 +139,8 @@ class Database
     }
 
 
-    public function bindValues(array &$args): ?static
+    public
+    function bindValues(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
@@ -160,7 +170,8 @@ class Database
     }
 
 
-    public function bindValue($column, $value, $type = PDO::PARAM_STR): static
+    public
+    function bindValue($column, $value, $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -168,7 +179,8 @@ class Database
     }
 
 
-    private function areAllElementsArray(array $args): bool
+    private
+    function areAllElementsArray(array $args): bool
     {
         foreach ($args as $arg) {
             if (!is_array($arg)) return false;
@@ -177,80 +189,86 @@ class Database
     }
 
 
-    public function execute(string $queryStatement = null): static
+    public
+    function execute(string $queryStatement = null): static
     {
         // If queryStatement is not null, then execute the queryStatement.
         if ($queryStatement !== null && $this->queryStatement === null) {
             // query() function prepares and executes the queryStatement, and returns pdoStatement|false.
-            $this->queryStatement = $this->connection->query($queryStatement);
+            $this->queryStatement = self::$connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
-        }
-
-        // If queryStatement is true, then execute the queryStatement.
+        } // If queryStatement is true, then execute the queryStatement.
         else if ($queryStatement === null && $this->queryStatement !== null) {
             $this->queryExecutionStatus = $this->queryStatement->execute();
-        }
-
-        // If queryStatement is false, throw an error.
+        } // If queryStatement is false, throw an error.
         else throw new PDOException("Invalid or no queryStatement to execute.");
         // Return the object for function chaining.
         return $this;
     }
 
 
-    public function beginTransaction(): bool
+    public
+    function beginTransaction(): bool
     {
-        return $this->connection->beginTransaction();
+        return self::$connection->beginTransaction();
     }
 
 
-    public function commit(): bool
+    public
+    function commit(): bool
     {
-        return $this->connection->commit();
+        return self::$connection->commit();
     }
 
 
-    public function rollback(): bool
+    public
+    function rollback(): bool
     {
-        return $this->connection->rollBack();
+        return self::$connection->rollBack();
     }
 
 
-    public function lastInsertId(): string
+    public
+    function lastInsertId(): string
     {
-        return $this->connection->lastInsertId();
+        return self::$connection->lastInsertId();
     }
 
 
-    public function rowCount(): int
+    public
+    function rowCount(): int
     {
         return $this->queryStatement->rowCount();
     }
 
 
-    public function affectedRowCount(): int
+    public
+    function affectedRowCount(): int
     {
         return $this->rowCount();
     }
 
 
-    public function fetch($fetchStyle = PDO::FETCH_ASSOC)
+    public
+    function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
         else throw new PDOException("No executed statement to fetch results");
     }
 
 
-    public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
+    public
+    function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
         else throw new PDOException("No executed statement to fetch results");
     }
 
 
-    public function close(): void
+    public
+    function close(): void
     {
-        if ($this->connection) $this->connection = null;
+        if (self::$connection) self::$connection = null;
         $this->queryExecutionStatus = false;
     }
 }

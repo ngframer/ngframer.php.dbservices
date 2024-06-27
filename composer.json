@@ -1,10 +1,10 @@
 {
-  "name": "ngframer/ngframer.php.dbservice",
+  "name": "ngframer/ngframer.php.dbservices",
   "description": "Simple yet powerful database layer for PHP.",
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "NGFramer\\NGFramerPHPDbService\\": "/"
+      "NGFramer\\NGFramerPHPDbServices\\": "/"
     }
   },
   "authors": [

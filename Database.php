@@ -1,6 +1,6 @@
 <?php
 
-namespace NGFramer\NGFramerPHPDbService;
+namespace NGFramer\NGFramerPHPDbServices;
 
 use app\config\ApplicationConfig;
 use app\config\DatabaseConfig;

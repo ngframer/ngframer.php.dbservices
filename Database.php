@@ -27,12 +27,21 @@ class Database
     /**
      * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
      * @return Database. Returns the singleton instance.
+     * @throws Exception
      */
     public static function getInstance(): Database
     {
+        // This will create an instance and instance will initialize the constructor.
         if (empty(self::$instance)) {
             self::$instance = new self();
         }
+
+        // Only when instance is available but connection is destroyed.
+        if (empty(self::$connection)) {
+            self::$instance->connect();
+        }
+
+        // Finally the instance will always have a PDO connection to operate on, return it.
         return self::$instance;
     }
 
@@ -90,8 +99,7 @@ class Database
     }
 
 
-    public
-    function prepare(string $queryStatement = null, $options = []): ?static
+    public function prepare(string $queryStatement = null, $options = []): ?static
     {
         if (empty($queryStatement)) throw new PDOException("No / empty query to prepare.");
         else $this->queryStatement = self::$connection->prepare($queryStatement, $options);
@@ -99,8 +107,7 @@ class Database
     }
 
 
-    public
-    function bindParams(array &$args): ?static
+    public function bindParams(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
@@ -130,8 +137,7 @@ class Database
     }
 
 
-    public
-    function bindParam($column, &$value, $type = PDO::PARAM_STR): static
+    public function bindParam($column, &$value, $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -139,8 +145,7 @@ class Database
     }
 
 
-    public
-    function bindValues(array &$args): ?static
+    public function bindValues(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
@@ -170,8 +175,7 @@ class Database
     }
 
 
-    public
-    function bindValue($column, $value, $type = PDO::PARAM_STR): static
+    public function bindValue($column, $value, $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -179,8 +183,7 @@ class Database
     }
 
 
-    private
-    function areAllElementsArray(array $args): bool
+    private function areAllElementsArray(array $args): bool
     {
         foreach ($args as $arg) {
             if (!is_array($arg)) return false;
@@ -189,8 +192,7 @@ class Database
     }
 
 
-    public
-    function execute(string $queryStatement = null): static
+    public function execute(string $queryStatement = null): static
     {
         // If queryStatement is not null, then execute the queryStatement.
         if ($queryStatement !== null && $this->queryStatement === null) {
@@ -207,66 +209,57 @@ class Database
     }
 
 
-    public
-    function beginTransaction(): bool
+    public function beginTransaction(): bool
     {
         return self::$connection->beginTransaction();
     }
 
 
-    public
-    function commit(): bool
+    public function commit(): bool
     {
         return self::$connection->commit();
     }
 
 
-    public
-    function rollback(): bool
+    public function rollback(): bool
     {
         return self::$connection->rollBack();
     }
 
 
-    public
-    function lastInsertId(): string
+    public function lastInsertId(): string
     {
         return self::$connection->lastInsertId();
     }
 
 
-    public
-    function rowCount(): int
+    public function rowCount(): int
     {
         return $this->queryStatement->rowCount();
     }
 
 
-    public
-    function affectedRowCount(): int
+    public function affectedRowCount(): int
     {
         return $this->rowCount();
     }
 
 
-    public
-    function fetch($fetchStyle = PDO::FETCH_ASSOC)
+    public function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
         else throw new PDOException("No executed statement to fetch results");
     }
 
 
-    public
-    function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
+    public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
         else throw new PDOException("No executed statement to fetch results");
     }
 
 
-    public
-    function close(): void
+    public function close(): void
     {
         if (self::$connection) self::$connection = null;
         $this->queryExecutionStatus = false;

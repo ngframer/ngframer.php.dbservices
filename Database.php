@@ -63,10 +63,8 @@ class Database
     {
         // Only create an instance if the connection is not already created.
         if (empty(self::$connection)) {
-            // Check the configuration file for the database connection.
-            $this->validateConfigFile();
 
-            // Now the main connection.
+            // The main connection.
             $pdoAttributes = [
                 PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -79,23 +77,10 @@ class Database
                 $db_user = DatabaseConfig::get('db_user');
                 $db_pass = DatabaseConfig::get('db_pass');
                 self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
-            } catch (Throwable $th) {
-                throw new PDOException("Connection to the database was not established. Error Message: " . $th->getMessage());
+            } catch (Exception $exception) {
+                throw $exception;
             }
         }
-    }
-
-
-    /**
-     * @throws Exception
-     */
-    private
-    function validateConfigFile(): void
-    {
-        $configFile = ApplicationConfig::get('root') . '/config/DatabaseConfig.php';
-        if (!file_exists($configFile)) {
-            throw new PDOException("Missing Connection Configuration File. Please check /config/DatabaseConfig.php.");
-        } else require_once $configFile;
     }
 
 

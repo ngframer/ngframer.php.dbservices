@@ -212,6 +212,12 @@ class Database
     }
 
 
+    public function hasActiveTransactions()
+    {
+        return self::$connection->inTransaction();
+    }
+
+
     public function lastInsertId(): string
     {
         return self::$connection->lastInsertId();

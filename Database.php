@@ -182,6 +182,7 @@ class Database
      * @param $value
      * @param int $type
      * @return Database
+     * @throws DbServicesException
      */
     public function bindParam(string $column, &$value, int $type = PDO::PARAM_STR): static
     {
@@ -250,6 +251,7 @@ class Database
      * @param $value
      * @param int $type
      * @return Database
+     * @throws DbServicesException
      */
     public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {

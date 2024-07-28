@@ -335,25 +335,31 @@ class Database
 
     /**
      * Function to fetch the results.
+     * @param int $fetchStyle
      * @return array . Returns all the results of the query.
      * @throws DbServicesException
      */
-    public function fetch($fetchStyle = PDO::FETCH_ASSOC): array
+    public function fetch(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
-        if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
-        else throw new DbServicesException("No executed statement to fetch results", 4000013);
+        if ($this->queryExecutionStatus) {
+            return $this->queryStatement->fetch($fetchStyle);
+        }
+        throw new DbServicesException("No executed statement to fetch results", 4000013);
     }
 
 
     /**
      * Function to fetch all the results of the query.
+     * @param int $fetchStyle
      * @return array . Returns all the results of the query.
      * @throws DbServicesException
      */
-    public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): array
+    public function fetchAll(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
-        if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
-        else throw new DbServicesException("No executed statement to fetch results", 4000014);
+        if ($this->queryExecutionStatus) {
+            return $this->queryStatement->fetchAll($fetchStyle);
+        }
+        throw new DbServicesException("No executed statement to fetch results", 4000014);
     }
 
 

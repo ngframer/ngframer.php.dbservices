@@ -3,7 +3,6 @@
 namespace NGFramer\NGFramerPHPDbServices;
 
 use PDO;
-use Exception;
 use PDOStatement;
 use PDOException;
 use app\config\ApplicationConfig;
@@ -116,8 +115,25 @@ class Database
      */
     public function prepare(string $queryStatement = null, array $options = []): ?static
     {
-        if (empty($queryStatement)) throw new DbServicesException("No query to prepare.", 4000007);
-        else $this->queryStatement = self::$connection->prepare($queryStatement, $options);
+        if (empty($queryStatement)) {
+            throw new DbServicesException("No query to prepare.", 4000007);
+        }
+
+        // Check for any possible error handling.
+        try {
+            $this->queryStatement = self::$connection->prepare($queryStatement, $options);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() == 42000) {
+                throw new DbServicesException("Syntax error or Access violation.", 4000015);
+            } elseif ($exception->getCode() == '42S02') {
+                throw new DbServicesException("Base table or view not found.", 4000016);
+            } else {
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
+                throw new DbServicesException("Something went wrong. Visit error_log for details.", 4000017);
+            }
+        }
+
+        // Return for function chaining.
         return $this;
     }
 
@@ -172,8 +188,22 @@ class Database
         if (!str_starts_with($column, ":")) {
             $column = ":" . $column;
         }
+
         // Now using the main function to bind.
-        $this->queryStatement->bindParam($column, $value, $type);
+        try {
+            $this->queryStatement->bindParam($column, $value, $type);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() == 22001) {
+                throw new DbServicesException("Syntax error or Access violation.", 4000015);
+            } elseif ($exception->getCode() == 22007) {
+                throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4000016);
+            } else {
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
+                throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4000017);
+            }
+        }
+
+        // Return for function chaining.
         return $this;
     }
 
@@ -226,8 +256,22 @@ class Database
         if (!str_starts_with($column, ":")) {
             $column = ":" . $column;
         }
+
         // Now using the main function to bind.
-        $this->queryStatement->bindParam($column, $value, $type);
+        try {
+            $this->queryStatement->bindValue($column, $value, $type);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() == 22001) {
+                throw new DbServicesException("Syntax error or Access violation.", 4000015);
+            } elseif ($exception->getCode() == 22007) {
+                throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4000016);
+            } else {
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
+                throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4000017);
+            }
+        }
+
+        // Return for function chaining.
         return $this;
     }
 

@@ -2,13 +2,13 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
+use PDO;
+use Exception;
+use PDOStatement;
+use PDOException;
 use app\config\ApplicationConfig;
 use app\config\DatabaseConfig;
-use PDO;
-use PDOStatement;
-use Throwable;
-use Exception;
-use PDOException;
+use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesException;
 
 
 class Database
@@ -57,7 +57,7 @@ class Database
 
 
     /**
-     * @throws Exception
+     * @throws DbServicesException
      */
     private function connect(): void
     {
@@ -71,36 +71,61 @@ class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
             ];
 
+            // Check if the DatabaseConfig class exists or not.
+            if (!class_exists('app/config/DatabaseConfig')) {
+                throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4000001);
+            }
+
+            if (!ApplicationConfig::exists('db_dsn') || !ApplicationConfig::exists('db_user') || !ApplicationConfig::exists('db_pass')) {
+                throw new DbServicesException("Requested variable are not set.", 4000002);
+            }
+
             try {
                 // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
                 $db_dsn = DatabaseConfig::get('db_dsn');
                 $db_user = DatabaseConfig::get('db_user');
                 $db_pass = DatabaseConfig::get('db_pass');
                 self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
-            } catch (Exception $exception) {
-                throw $exception;
+            } catch (PDOException $exception) {
+                // Check the code of the exception.
+                if ($exception->getCode() == 2002) {
+                    throw new DbServicesException("Connection refused to database server.", 4000003);
+                } else if ($exception->getCode() == 1045) {
+                    throw new DbServicesException("Invalid username or password.", 4000004);
+                } else if ($exception->getCode() == 1049) {
+                    throw new DbServicesException("Database doesn't exist.", 4000005);
+                } else {
+                    error_log(json_encode($exception) . "occurred. Code: 4000006 (4M6)");
+                    throw new DbServicesException("Database connection failed of unknown reason.", 4000006);
+                }
             }
         }
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function prepare(string $queryStatement = null, $options = []): ?static
     {
-        if (empty($queryStatement)) throw new PDOException("No / empty query to prepare.");
+        if (empty($queryStatement)) throw new DbServicesException("No query to prepare.", 4000007);
         else $this->queryStatement = self::$connection->prepare($queryStatement, $options);
         return $this;
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function bindParams(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            throw new PDOException("No queryStatement to bind parameters to.");
+            throw new DbServicesException("No queryStatement to bind parameters to.", 4000008);
         }
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            throw new PDOException("No parameters passed to bind to queryStatement.");
+            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4000009);
         }
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
@@ -130,15 +155,18 @@ class Database
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function bindValues(array &$args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            throw new PDOException("No queryStatement to bind parameters to.");
+            throw new DbServicesException("No queryStatement to bind parameters to.", 4000010);
         }
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            throw new PDOException("No parameters passed to bind to queryStatement.");
+            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4000011);
         }
         // If all elements of the array are arrays, then run bindParam function with arg.
         if ($this->areAllElementsArray($args)) {
@@ -177,6 +205,9 @@ class Database
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function execute(string $queryStatement = null): static
     {
         // If queryStatement is not null, then execute the queryStatement.
@@ -188,7 +219,7 @@ class Database
         else if ($queryStatement === null && $this->queryStatement !== null) {
             $this->queryExecutionStatus = $this->queryStatement->execute();
         } // If queryStatement is false, throw an error.
-        else throw new PDOException("Invalid or no queryStatement to execute.");
+        else throw new DbServicesException("Invalid or no queryStatement to execute.", 4000012);
         // Return the object for function chaining.
         return $this;
     }
@@ -212,7 +243,7 @@ class Database
     }
 
 
-    public function hasActiveTransactions()
+    public function hasActiveTransactions(): bool
     {
         return self::$connection->inTransaction();
     }
@@ -236,17 +267,23 @@ class Database
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function fetch($fetchStyle = PDO::FETCH_ASSOC)
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
-        else throw new PDOException("No executed statement to fetch results");
+        else throw new DbServicesException("No executed statement to fetch results", 4000013);
     }
 
 
+    /**
+     * @throws DbServicesException
+     */
     public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
-        else throw new PDOException("No executed statement to fetch results");
+        else throw new DbServicesException("No executed statement to fetch results", 4000014);
     }
 
 

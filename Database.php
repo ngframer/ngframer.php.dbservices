@@ -13,7 +13,7 @@ use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesException;
 
 class Database
 {
-    // Singleton instance variable.
+    // Singleton instance variable of the class.
     private static ?Database $instance = null;
 
     // Using static to hold on the single instance of PDO.
@@ -27,7 +27,7 @@ class Database
     /**
      * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
      * @return Database. Returns the singleton instance.
-     * @throws Exception
+     * @throws DbServicesException
      */
     public static function getInstance(): Database
     {
@@ -48,7 +48,8 @@ class Database
 
     /**
      * Private constructor to make sure, no more of it's instance can be created.
-     * @throws Exception
+     * @throws DbServicesException
+     * @return void
      */
     private function __construct()
     {
@@ -57,6 +58,9 @@ class Database
 
 
     /**
+     * Function connects to the database using PDO.
+     * Connects to the database only if the connection is not already created.
+     * @return void
      * @throws DbServicesException
      */
     private function connect(): void
@@ -104,9 +108,13 @@ class Database
 
 
     /**
+     * Function to prepare the queryStatement.
+     * @param string|null $queryStatement . Query to prepare for the execution.
+     * @param array $options . Optional parameter to pass options to the prepare function.
+     * @return Database|null
      * @throws DbServicesException
      */
-    public function prepare(string $queryStatement = null, $options = []): ?static
+    public function prepare(string $queryStatement = null, array $options = []): ?static
     {
         if (empty($queryStatement)) throw new DbServicesException("No query to prepare.", 4000007);
         else $this->queryStatement = self::$connection->prepare($queryStatement, $options);
@@ -115,6 +123,9 @@ class Database
 
 
     /**
+     * Function to bind multiple parameters to the queryStatement.
+     *  Uses referenced variable names to bind.
+     *  @param array $args . Array of parameters to bind.
      * @throws DbServicesException
      */
     public function bindParams(array &$args): ?static
@@ -147,7 +158,16 @@ class Database
     }
 
 
-    public function bindParam($column, &$value, $type = PDO::PARAM_STR): static
+    /**
+     * Function to bind the parameters to the queryStatement.
+     * To bind multiple parameters at once, use bindValues/bindParams.
+     * Uses referenced variable names to bind.
+     * @param string $column
+     * @param $value
+     * @param int $type
+     * @return Database
+     */
+    public function bindParam(string $column, &$value, int $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -156,6 +176,8 @@ class Database
 
 
     /**
+     * Function to bind multiple values to the queryStatement.
+     * @param array $args . Array of parameters to bind.
      * @throws DbServicesException
      */
     public function bindValues(array &$args): ?static
@@ -188,7 +210,15 @@ class Database
     }
 
 
-    public function bindValue($column, $value, $type = PDO::PARAM_STR): static
+    /**
+     * Function to bind single value to the queryStatement.
+     * Can bind only single value at once.
+     * @param string $column
+     * @param $value
+     * @param int $type
+     * @return Database
+     */
+    public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {
         if (!str_starts_with($column, ":")) $column = ":" . $column;
         $this->queryStatement->bindParam($column, $value, $type);
@@ -196,6 +226,11 @@ class Database
     }
 
 
+    /**
+     * Function checks if the arguments of all the elements of the array are arrays or something else.
+     * @param array $args
+     * @return bool
+     */
     private function areAllElementsArray(array $args): bool
     {
         foreach ($args as $arg) {
@@ -206,6 +241,9 @@ class Database
 
 
     /**
+     * Function to execute the query or the query statement.
+     * Allows the execution of both the prepared execution type and direct execution type.
+     * @param string|null $queryStatement . Query to prepare for the execution, optional. Only in case of direct execution type.
      * @throws DbServicesException
      */
     public function execute(string $queryStatement = null): static
@@ -225,42 +263,70 @@ class Database
     }
 
 
+    /**
+     * Function to start the transaction.
+     * @return bool
+     */
     public function beginTransaction(): bool
     {
         return self::$connection->beginTransaction();
     }
 
-
+    /**
+     * Function to end the transaction and save the records.
+     * @return bool
+     */
     public function commit(): bool
     {
         return self::$connection->commit();
     }
 
 
+    /**
+     * Function to end the transaction and remove the records.
+     * @return bool
+     */
     public function rollback(): bool
     {
         return self::$connection->rollBack();
     }
 
 
+    /**
+     * Function to check if there are any active transactions.
+     * @return bool
+     */
     public function hasActiveTransactions(): bool
     {
         return self::$connection->inTransaction();
     }
 
 
+    /**
+     * Function to get the last inserted id.
+     * @return string
+     */
     public function lastInsertId(): string
     {
         return self::$connection->lastInsertId();
     }
 
 
+    /**
+     * Function to get the number of rows affected by the query.
+     * @return int
+     */
     public function rowCount(): int
     {
         return $this->queryStatement->rowCount();
     }
 
 
+    /**
+     * Clone of function rowCount().
+     * Function to get the number of rows affected by the query.
+     * @return int
+     */
     public function affectedRowCount(): int
     {
         return $this->rowCount();
@@ -268,9 +334,11 @@ class Database
 
 
     /**
+     * Function to fetch the results.
+     * @return array . Returns all the results of the query.
      * @throws DbServicesException
      */
-    public function fetch($fetchStyle = PDO::FETCH_ASSOC)
+    public function fetch($fetchStyle = PDO::FETCH_ASSOC): array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetch($fetchStyle);
         else throw new DbServicesException("No executed statement to fetch results", 4000013);
@@ -278,15 +346,25 @@ class Database
 
 
     /**
+     * Function to fetch all the results of the query.
+     * @return array . Returns all the results of the query.
      * @throws DbServicesException
      */
-    public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): bool|array
+    public function fetchAll($fetchStyle = PDO::FETCH_ASSOC): array
     {
         if ($this->queryExecutionStatus) return $this->queryStatement->fetchAll($fetchStyle);
         else throw new DbServicesException("No executed statement to fetch results", 4000014);
     }
 
 
+    /**
+     * Use this with caution. Can make the application unstable if used incorrectly.
+     * ==========================>
+     * Use this only when previous connection can't be used for another transaction.
+     * Creates a new connection and assigns it to $connection variable.
+     * Closing the connection is not possible.
+     * @return void
+     */
     public function close(): void
     {
         if (self::$connection) self::$connection = null;

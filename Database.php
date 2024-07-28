@@ -169,7 +169,10 @@ class Database
      */
     public function bindParam(string $column, &$value, int $type = PDO::PARAM_STR): static
     {
-        if (!str_starts_with($column, ":")) $column = ":" . $column;
+        if (!str_starts_with($column, ":")) {
+            $column = ":" . $column;
+        }
+        // Now using the main function to bind.
         $this->queryStatement->bindParam($column, $value, $type);
         return $this;
     }
@@ -220,7 +223,10 @@ class Database
      */
     public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {
-        if (!str_starts_with($column, ":")) $column = ":" . $column;
+        if (!str_starts_with($column, ":")) {
+            $column = ":" . $column;
+        }
+        // Now using the main function to bind.
         $this->queryStatement->bindParam($column, $value, $type);
         return $this;
     }

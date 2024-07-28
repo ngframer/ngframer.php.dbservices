@@ -124,12 +124,12 @@ class Database
             $this->queryStatement = self::$connection->prepare($queryStatement, $options);
         } catch (PDOException $exception) {
             if ($exception->getCode() == 42000) {
-                throw new DbServicesException("Syntax error or Access violation.", 4000015);
+                throw new DbServicesException("Syntax error or Access violation.", 4000022);
             } elseif ($exception->getCode() == '42S02') {
-                throw new DbServicesException("Base table or view not found.", 4000016);
+                throw new DbServicesException("Base table or view not found.", 4000023);
             } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
-                throw new DbServicesException("Something went wrong. Visit error_log for details.", 4000017);
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000024 (4M24)");
+                throw new DbServicesException("Something went wrong. Visit error_log for details.", 4000024);
             }
         }
 
@@ -194,14 +194,7 @@ class Database
         try {
             $this->queryStatement->bindParam($column, $value, $type);
         } catch (PDOException $exception) {
-            if ($exception->getCode() == 22001) {
-                throw new DbServicesException("Syntax error or Access violation.", 4000015);
-            } elseif ($exception->getCode() == 22007) {
-                throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4000016);
-            } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
-                throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4000017);
-            }
+            $this->handleBind($exception);
         }
 
         // Return for function chaining.
@@ -263,18 +256,31 @@ class Database
         try {
             $this->queryStatement->bindValue($column, $value, $type);
         } catch (PDOException $exception) {
-            if ($exception->getCode() == 22001) {
-                throw new DbServicesException("Syntax error or Access violation.", 4000015);
-            } elseif ($exception->getCode() == 22007) {
-                throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4000016);
-            } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M7)");
-                throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4000017);
-            }
+            $this->handleBind($exception);
         }
 
         // Return for function chaining.
         return $this;
+    }
+
+
+    /**
+     * @param PDOException $exception
+     * @return void
+     * @throws DbServicesException
+     */
+    private function handleBind(PDOException $exception): void
+    {
+        if ($exception->getCode() == 22001) {
+            throw new DbServicesException("Data too long to insert or update.", 4000015);
+        } elseif ($exception->getCode() == 22007) {
+            throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4000016);
+        } elseif ($exception->getCode() == 'HY093') {
+            throw new DbServicesException("Invalid parameter number.", 4000026);
+        } else {
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000017 (4M17)");
+            throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4000017);
+        }
     }
 
 
@@ -325,8 +331,19 @@ class Database
         try {
             $this->queryStatement = self::$connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
-        } catch (PDOException $e) {
-            throw new DbServicesException("Failed to execute direct query.");
+        } catch (PDOException $exception) {
+            if ($exception->getCode() == 42000) {
+                throw new DbServicesException("Syntax error or Access violation.", 4000018);
+            } elseif ($exception->getCode() == 23000) {
+                throw new DbServicesException("Integrity constraint violation.", 4000019);
+            } elseif ($exception->getCode() == 'HY000') {
+                throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
+            } elseif ($exception->getCode() == 22001) {
+                throw new DbServicesException("Data too long to insert or update.", 4000025);
+            } else {
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000021 (4M21)");
+                throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4000021);
+            }
         }
     }
 
@@ -353,6 +370,7 @@ class Database
     {
         return self::$connection->beginTransaction();
     }
+    
 
     /**
      * Function to end the transaction and save the records.

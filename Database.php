@@ -295,23 +295,53 @@ class Database
     /**
      * Function to execute the query or the query statement.
      * Allows the execution of both the prepared execution type and direct execution type.
-     * @param string|null $queryStatement . Query to prepare for the execution, optional. Only in case of direct execution type.
+     * @param string|null $queryStatement Query to prepare for the execution, optional. Only in case of direct execution type.
      * @throws DbServicesException
+     * @return Database
      */
     public function execute(string $queryStatement = null): static
     {
-        // If queryStatement is not null, then execute the queryStatement.
+        // Check if a direct query statement is provided and no existing prepared statement exists.
         if ($queryStatement !== null && $this->queryStatement === null) {
-            // query() function prepares and executes the queryStatement, and returns pdoStatement|false.
-            $this->queryStatement = self::$connection->query($queryStatement);
-            $this->queryExecutionStatus = $this->queryStatement !== false;
-        } // If queryStatement is true, then execute the queryStatement.
-        else if ($queryStatement === null && $this->queryStatement !== null) {
-            $this->queryExecutionStatus = $this->queryStatement->execute();
-        } // If queryStatement is false, throw an error.
-        else throw new DbServicesException("Invalid or no queryStatement to execute.", 4000012);
+            $this->executeDirectQuery($queryStatement);
+        } elseif ($queryStatement === null && $this->queryStatement !== null) {
+            $this->executePreparedStatement();
+        } else {
+            throw new DbServicesException("Invalid or no queryStatement to execute.", 4000012);
+        }
+
         // Return the object for function chaining.
         return $this;
+    }
+
+
+    /**
+     * Execute a direct query statement.
+     * @param string $queryStatement
+     * @throws DbServicesException
+     */
+    private function executeDirectQuery(string $queryStatement): void
+    {
+        try {
+            $this->queryStatement = self::$connection->query($queryStatement);
+            $this->queryExecutionStatus = $this->queryStatement !== false;
+        } catch (PDOException $e) {
+            throw new DbServicesException("Failed to execute direct query.");
+        }
+    }
+
+
+    /**
+     * Execute a prepared statement.
+     * @throws DbServicesException
+     */
+    private function executePreparedStatement(): void
+    {
+        try {
+            $this->queryExecutionStatus = $this->queryStatement->execute();
+        } catch (PDOException $e) {
+            throw new DbServicesException("Failed to execute prepared statement.");
+        }
     }
 
 

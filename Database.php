@@ -95,7 +95,7 @@ class Database
                 } else if ($exception->getCode() == 1049) {
                     throw new DbServicesException("Database doesn't exist.", 4000005);
                 } else {
-                    error_log(json_encode($exception) . "occurred. Code: 4000006 (4M6)");
+                    error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000006 (4M6)");
                     throw new DbServicesException("Database connection failed of unknown reason.", 4000006);
                 }
             }

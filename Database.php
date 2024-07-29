@@ -2,8 +2,8 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
-use Exception;
 use PDO;
+use Exception;
 use PDOStatement;
 use PDOException;
 use app\config\ApplicationConfig;
@@ -352,6 +352,12 @@ class Database
     }
 
 
+    /**
+     * This function will handle the exception from the executeDirectQuery and executePreparedStatement functions.
+     * @param Exception $exception
+     * @return void
+     * @throws DbServicesException
+     */
     private function handleExecute(Exception $exception): void
     {
         if ($exception->getCode() == 2006) {

@@ -2,6 +2,7 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
+use Exception;
 use PDO;
 use PDOStatement;
 use PDOException;
@@ -332,28 +333,7 @@ class Database
             $this->queryStatement = self::$connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
         } catch (PDOException $exception) {
-            if ($exception->getCode() == 2006) {
-                throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4000030);
-            } elseif ($exception->getCode() == 2013) {
-                throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4000031);
-            } elseif ($exception->getCode() == 22001) {
-                throw new DbServicesException("Data too long to insert or update.", 4000025);
-            } elseif ($exception->getCode() == 22003) {
-                throw new DbServicesException("Data (numeric) value out of range.", 4000027);
-            } elseif ($exception->getCode() == 23000) {
-                throw new DbServicesException("Integrity constraint violation.", 4000019);
-            } elseif ($exception->getCode() == 40001) {
-                throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4000028);
-            } elseif ($exception->getCode() == 42000) {
-                throw new DbServicesException("Syntax error or Access violation.", 4000018);
-            } elseif ($exception->getCode() == 'HY000') {
-                throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
-            } elseif ($exception->getCode() == 'HY009') {
-                throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4000029);
-            } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000021 (4M21)");
-                throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4000021);
-            }
+            $this->handleExecute($exception);
         }
     }
 
@@ -366,8 +346,77 @@ class Database
     {
         try {
             $this->queryExecutionStatus = $this->queryStatement->execute();
-        } catch (PDOException $e) {
-            throw new DbServicesException("Failed to execute prepared statement.");
+        } catch (PDOException $exception) {
+            $this->handleExecute($exception);
+        }
+    }
+
+
+    private function handleExecute(Exception $exception): void
+    {
+        if ($exception->getCode() == 2006) {
+            throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4000030);
+        } elseif ($exception->getCode() == 2013) {
+            throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4000031);
+        } elseif ($exception->getCode() == 22000) {
+            throw new DbServicesException("General data error. Visit error_log for details.", 4000036);
+        } elseif ($exception->getCode() == 22001) {
+            throw new DbServicesException("Data too long to insert or update.", 4000025);
+        } elseif ($exception->getCode() == 22002) {
+            throw new DbServicesException("Indicator variable required not supplied.", 4000032);
+        } elseif ($exception->getCode() == 22003) {
+            throw new DbServicesException("Data (numeric) value out of range.", 4000027);
+        } elseif ($exception->getCode() == 22004) {
+            throw new DbServicesException("Null value not allowed in the column.", 4000033);
+        } elseif ($exception->getCode() == 22005) {
+            throw new DbServicesException("Error in assignment of value to parameter.", 4000037);
+        } elseif ($exception->getCode() == 22007) {
+            throw new DbServicesException("Invalid date or time format.", 4000038);
+        } elseif ($exception->getCode() == 22008) {
+            throw new DbServicesException("Date time field value out of range.", 4000039);
+        } elseif ($exception->getCode() == 23000) {
+            throw new DbServicesException("Integrity constraint violation.", 4000019);
+        } elseif ($exception->getCode() == 23502) {
+            throw new DbServicesException("Not Null Violation.", 4000040);
+        } elseif ($exception->getCode() == 23503) {
+            throw new DbServicesException("Foreign Key Violation.", 4000041);
+        } elseif ($exception->getCode() == 23505) {
+            throw new DbServicesException("Unique Key Violation.", 4000042);
+        } elseif ($exception->getCode() == 40001) {
+            throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4000028);
+        } elseif ($exception->getCode() == 42000) {
+            throw new DbServicesException("Syntax error or Access violation.", 4000018);
+        } elseif ($exception->getCode() == 42501) {
+            throw new DbServicesException("Insufficient privilege. Visit error_log for details.", 4000026);
+        } elseif ($exception->getCode() == 42601) {
+            throw new DbServicesException("Syntax error. Visit error_log for details.", 4000022);
+        } elseif ($exception->getCode() == 42602) {
+            throw new DbServicesException("Invalid cursor name. Visit error_log for details.", 4000043);
+        } elseif ($exception->getCode() == 42622) {
+            throw new DbServicesException("Too long identifier name.", 4000044);
+        } elseif ($exception->getCode() == 42701) {
+            throw new DbServicesException("The column name already exists.", 4000045);
+        } elseif ($exception->getCode() == 42703) {
+            throw new DbServicesException("Undefined column.", 4000046);
+        } elseif ($exception->getCode() == '42P01') {
+            throw new DbServicesException("Table or view not found.", 4000047);
+        } elseif ($exception->getCode() == '42P02') {
+            throw new DbServicesException("Undefined parameter.", 4000048);
+        } elseif ($exception->getCode() == '42P03') {
+            throw new DbServicesException("Duplicate cursor.", 4000049);
+        } elseif ($exception->getCode() == '42P04') {
+            throw new DbServicesException("Duplicate database.", 4000050);
+        } elseif ($exception->getCode() == 'HY000') {
+            throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
+        } elseif ($exception->getCode() == 'HY009') {
+            throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4000029);
+        } elseif ($exception->getCode() == 'HY013') {
+            throw new DbServicesException("Memory management error. Visit error_log for details.", 4000034);
+        } elseif ($exception->getCode() == 'HY014') {
+            throw new DbServicesException("Limit on the number of handles exceeded.", 4000035);
+        } else {
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000021 (4M21)");
+            throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4000021);
         }
     }
 

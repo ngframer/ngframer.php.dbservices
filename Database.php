@@ -98,6 +98,12 @@ class Database
                     throw new DbServicesException("Database doesn't exist.", 4000005);
                 } elseif ($exception->getCode() == 2002) {
                     throw new DbServicesException("Connection refused to database server.", 4000003);
+                } elseif ($exception->getCode() == '08001') {
+                    throw new DbServicesException("SQL Client unable to establish a connection.", 4000051);
+                } elseif ($exception->getCode() == '08003') {
+                    throw new DbServicesException("The connection does not exists. Visit error_log for details.", 4000052);
+                } elseif ($exception->getCode() == '08004') {
+                    throw new DbServicesException("The connection has been failed. Visit error_log for details.", 4000053);
                 } else {
                     error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000006 (4M6)");
                     throw new DbServicesException("Database connection failed of unknown reason.", 4000006);

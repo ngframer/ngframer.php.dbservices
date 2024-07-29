@@ -112,7 +112,7 @@ class Database
         }
     }
 
-    
+
     /**
      * Function to check if the connection exists.
      * @return bool
@@ -449,9 +449,16 @@ class Database
     /**
      * Function to start the transaction.
      * @return bool
+     * @throws DbServicesException
      */
     public function beginTransaction(): bool
     {
+        if (empty(self::$connection)) {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
+        if ($this->hasActiveTransactions()) {
+            throw new DbServicesException("Transaction already in progress.", 4000003);
+        }
         return self::$connection->beginTransaction();
     }
 
@@ -459,9 +466,16 @@ class Database
     /**
      * Function to end the transaction and save the records.
      * @return bool
+     * @throws DbServicesException
      */
     public function commit(): bool
     {
+        if (!$this->checkConnection()) {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
+        if (!self::$connection->inTransaction()) {
+            throw new DbServicesException("Transaction not in progress.", 4000004);
+        }
         return self::$connection->commit();
     }
 
@@ -469,9 +483,16 @@ class Database
     /**
      * Function to end the transaction and remove the records.
      * @return bool
+     * @throws DbServicesException
      */
     public function rollback(): bool
     {
+        if (!$this->checkConnection()) {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
+        if (!self::$connection->inTransaction()) {
+            throw new DbServicesException("Transaction not in progress.", 4000004);
+        }
         return self::$connection->rollBack();
     }
 
@@ -479,9 +500,13 @@ class Database
     /**
      * Function to check if there are any active transactions.
      * @return bool
+     * @throws DbServicesException
      */
     public function hasActiveTransactions(): bool
     {
+        if (!$this->checkConnection()) {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
         return self::$connection->inTransaction();
     }
 
@@ -489,9 +514,13 @@ class Database
     /**
      * Function to get the last inserted id.
      * @return string
+     * @throws DbServicesException
      */
     public function lastInsertId(): string
     {
+        if (!$this->checkConnection()) {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
         return self::$connection->lastInsertId();
     }
 
@@ -499,10 +528,14 @@ class Database
     /**
      * Function to get the number of rows affected by the query.
      * @return int
+     * @throws DbServicesException
      */
     public function rowCount(): int
     {
-        return $this->queryStatement->rowCount();
+        if ($this->queryExecutionStatus) {
+            return $this->queryStatement->rowCount();
+        }
+        throw new DbServicesException("No executed statement to fetch results", 4000013);
     }
 
 
@@ -510,6 +543,7 @@ class Database
      * Clone of function rowCount().
      * Function to get the number of rows affected by the query.
      * @return int
+     * @throws DbServicesException
      */
     public function affectedRowCount(): int
     {
@@ -557,7 +591,11 @@ class Database
      */
     public function close(): void
     {
-        if (self::$connection) self::$connection = null;
-        $this->queryExecutionStatus = false;
+        if ($this->checkConnection()) {
+            self::$connection = null;
+            $this->queryExecutionStatus = false;
+        } else {
+            throw new DbServicesException("Connection not established.", 4000002);
+        }
     }
 }

@@ -560,7 +560,11 @@ class Database
     public function fetch(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
         if ($this->queryExecutionStatus) {
-            return $this->queryStatement->fetch($fetchStyle);
+            try {
+                return $this->queryStatement->fetch($fetchStyle);
+            } catch (PDOException $exception) {
+                $this->handleFetch($exception);
+            }
         }
         throw new DbServicesException("No executed statement to fetch results", 4000013);
     }
@@ -575,9 +579,44 @@ class Database
     public function fetchAll(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
         if ($this->queryExecutionStatus) {
-            return $this->queryStatement->fetchAll($fetchStyle);
+            try {
+                return $this->queryStatement->fetchAll($fetchStyle);
+            } catch (PDOException $exception) {
+                $this->handleFetch($exception);
+            }
         }
         throw new DbServicesException("No executed statement to fetch results", 4000014);
+    }
+
+
+    /**
+     * Function to handle the PDO Exception while fetching and create new DbServicesException.
+     * @throws DbServicesException
+     */
+    private function handleFetch(PDOException $exception): void
+    {
+        if ($exception->getCode() == 22001) {
+            throw new DbServicesException("Data too long fetch.", 4000015);
+        } elseif ($exception->getCode() == 22002) {
+            throw new DbServicesException(" Indicator variable required but not supplied.", 4000016);
+        } elseif ($exception->getCode() == 23003) {
+            throw new DbServicesException("Numeric value out of range.", 4000017);
+        } elseif ($exception->getCode() == 23004) {
+            throw new DbServicesException("Null value not allowed.", 4000018);
+        } elseif ($exception->getCode() == 23005) {
+            throw new DbServicesException("Error in assignment.", 4000019);
+        } elseif ($exception->getCode() == 23007) {
+            throw new DbServicesException("Invalid datetime format.", 4000020);
+        } elseif ($exception->getCode() == 22008) {
+            throw new DbServicesException("Datetime field overflow", 4000021);
+        } elseif ($exception->getCode() == 22012) {
+            throw new DbServicesException("Divisible by zero.", 4000022);
+        } elseif ($exception->getCode() == 22018) {
+            throw new DbServicesException("Invalid character value for cast.", 4000023);
+        } else {
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000042");
+            throw new DbServicesException("Unknown error occurred during fetching results. Visit error_log for details.", 4000042);
+        }
     }
 
 
@@ -588,6 +627,7 @@ class Database
      * Creates a new connection and assigns it to $connection variable.
      * Closing the connection is not possible.
      * @return void
+     * @throws DbServicesException
      */
     public function close(): void
     {

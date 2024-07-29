@@ -91,12 +91,12 @@ class Database
                 self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
             } catch (PDOException $exception) {
                 // Check the code of the exception.
-                if ($exception->getCode() == 2002) {
-                    throw new DbServicesException("Connection refused to database server.", 4000003);
-                } else if ($exception->getCode() == 1045) {
+                if ($exception->getCode() == 1045) {
                     throw new DbServicesException("Invalid username or password.", 4000004);
-                } else if ($exception->getCode() == 1049) {
+                } elseif ($exception->getCode() == 1049) {
                     throw new DbServicesException("Database doesn't exist.", 4000005);
+                } elseif ($exception->getCode() == 2002) {
+                    throw new DbServicesException("Connection refused to database server.", 4000003);
                 } else {
                     error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000006 (4M6)");
                     throw new DbServicesException("Database connection failed of unknown reason.", 4000006);
@@ -332,24 +332,24 @@ class Database
             $this->queryStatement = self::$connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
         } catch (PDOException $exception) {
-            if ($exception->getCode() == 42000) {
-                throw new DbServicesException("Syntax error or Access violation.", 4000018);
-            } elseif ($exception->getCode() == 23000) {
-                throw new DbServicesException("Integrity constraint violation.", 4000019);
+            if ($exception->getCode() == 2006) {
+                throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4000030);
+            } elseif ($exception->getCode() == 2013) {
+                throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4000031);
             } elseif ($exception->getCode() == 22001) {
                 throw new DbServicesException("Data too long to insert or update.", 4000025);
             } elseif ($exception->getCode() == 22003) {
                 throw new DbServicesException("Data (numeric) value out of range.", 4000027);
+            } elseif ($exception->getCode() == 23000) {
+                throw new DbServicesException("Integrity constraint violation.", 4000019);
             } elseif ($exception->getCode() == 40001) {
                 throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4000028);
-            } elseif ($exception->getCode() == 2006) {
-                throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4000030);
-            } elseif ($exception->getCode() == 2013) {
-                throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4000031);
-            } elseif ($exception->getCode() == 'HY009') {
-                throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4000029);
+            } elseif ($exception->getCode() == 42000) {
+                throw new DbServicesException("Syntax error or Access violation.", 4000018);
             } elseif ($exception->getCode() == 'HY000') {
                 throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
+            } elseif ($exception->getCode() == 'HY009') {
+                throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4000029);
             } else {
                 error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000021 (4M21)");
                 throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4000021);

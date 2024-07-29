@@ -112,6 +112,19 @@ class Database
         }
     }
 
+    
+    /**
+     * Function to check if the connection exists.
+     * @return bool
+     */
+    private function checkConnection(): bool
+    {
+        if (self::$connection instanceof PDO && !empty(self::$connection)) {
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * Function to prepare the queryStatement.

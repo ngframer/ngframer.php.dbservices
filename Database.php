@@ -336,10 +336,20 @@ class Database
                 throw new DbServicesException("Syntax error or Access violation.", 4000018);
             } elseif ($exception->getCode() == 23000) {
                 throw new DbServicesException("Integrity constraint violation.", 4000019);
-            } elseif ($exception->getCode() == 'HY000') {
-                throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
             } elseif ($exception->getCode() == 22001) {
                 throw new DbServicesException("Data too long to insert or update.", 4000025);
+            } elseif ($exception->getCode() == 22003) {
+                throw new DbServicesException("Data (numeric) value out of range.", 4000027);
+            } elseif ($exception->getCode() == 40001) {
+                throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4000028);
+            } elseif ($exception->getCode() == 2006) {
+                throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4000030);
+            } elseif ($exception->getCode() == 2013) {
+                throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4000031);
+            } elseif ($exception->getCode() == 'HY009') {
+                throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4000029);
+            } elseif ($exception->getCode() == 'HY000') {
+                throw new DbServicesException("Unknown general error. Visit error_log for details.", 4000020);
             } else {
                 error_log("The exception caught is " . json_encode($exception) . ". New Code: 4000021 (4M21)");
                 throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4000021);
@@ -370,7 +380,7 @@ class Database
     {
         return self::$connection->beginTransaction();
     }
-    
+
 
     /**
      * Function to end the transaction and save the records.

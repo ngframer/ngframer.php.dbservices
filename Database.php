@@ -105,7 +105,7 @@ class Database
                 } elseif ($exception->getCode() == '08004') {
                     throw new DbServicesException("The connection has been failed. Visit error_log for details.", 4005003);
                 } else {
-                    error_log("The exception caught is " . json_encode($exception) . ". New Code: 4004004 (4M4004)");
+                    error_log("The exception caught is " . json_encode($exception) . ". New Code: 4004004 (4M4K4)");
                     throw new DbServicesException("Database connection failed of unknown reason.", 4004004);
                 }
             }
@@ -148,7 +148,7 @@ class Database
             } elseif ($exception->getCode() == '42S02') {
                 throw new DbServicesException("Base table or view not found.", 4023001);
             } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4024001 (4M24001)");
+                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4024001 (4M24K1)");
                 throw new DbServicesException("Something went wrong. Visit error_log for details.", 4024001);
             }
         }
@@ -298,7 +298,7 @@ class Database
         } elseif ($exception->getCode() == 'HY093') {
             throw new DbServicesException("Invalid parameter number.", 4026001);
         } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4017001 (4M17001)");
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4017001 (4M17K1)");
             throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4017001);
         }
     }
@@ -440,7 +440,7 @@ class Database
         } elseif ($exception->getCode() == 'HY014') {
             throw new DbServicesException("Limit on the number of handles exceeded.", 4035001);
         } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4021001 (4M21001)");
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4021001 (4M21K1)");
             throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4021001);
         }
     }
@@ -614,7 +614,7 @@ class Database
         } elseif ($exception->getCode() == 22018) {
             throw new DbServicesException("Invalid character value for cast.", 4023001);
         } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4042001 (4M42001)");
+            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4042001 (4M42K1)");
             throw new DbServicesException("Unknown error occurred during fetching results. Visit error_log for details.", 4042001);
         }
     }

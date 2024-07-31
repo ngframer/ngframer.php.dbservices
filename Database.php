@@ -2,13 +2,13 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
-use app\config\ApplicationConfig;
-use app\config\DatabaseConfig;
-use Exception;
-use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException;
 use PDO;
+use Exception;
 use PDOException;
 use PDOStatement;
+use app\config\DatabaseConfig;
+use app\config\ApplicationConfig;
+use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException;
 
 
 class Database
@@ -27,7 +27,7 @@ class Database
     /**
      * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
      * @return Database. Returns the singleton instance.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public static function getInstance(): Database
     {
@@ -61,7 +61,7 @@ class Database
      * Function connects to the database using PDO.
      * Connects to the database only if the connection is not already created.
      * @return void
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function connect(): void
     {
@@ -131,7 +131,7 @@ class Database
      * @param string|null $queryStatement . Query to prepare for the execution.
      * @param array $options . Optional parameter to pass options to the prepare function.
      * @return Database|null
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function prepare(string $queryStatement = null, array $options = []): ?static
     {
@@ -162,7 +162,7 @@ class Database
      * Function to bind multiple parameters to the queryStatement.
      *  Uses referenced variable names to bind.
      *  @param array $args . Array of parameters to bind.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function bindParams(array &$args): ?static
     {
@@ -202,7 +202,7 @@ class Database
      * @param $value
      * @param int $type
      * @return Database
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function bindParam(string $column, &$value, int $type = PDO::PARAM_STR): static
     {
@@ -225,7 +225,7 @@ class Database
     /**
      * Function to bind multiple values to the queryStatement.
      * @param array $args . Array of parameters to bind.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function bindValues(array &$args): ?static
     {
@@ -264,7 +264,7 @@ class Database
      * @param $value
      * @param int $type
      * @return Database
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {
@@ -287,7 +287,7 @@ class Database
     /**
      * @param PDOException $exception
      * @return void
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function handleBind(PDOException $exception): void
     {
@@ -344,7 +344,7 @@ class Database
     /**
      * Execute a direct query statement.
      * @param string $queryStatement
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function executeDirectQuery(string $queryStatement): void
     {
@@ -359,7 +359,7 @@ class Database
 
     /**
      * Execute a prepared statement.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function executePreparedStatement(): void
     {
@@ -375,7 +375,7 @@ class Database
      * This function will handle the exception from the executeDirectQuery and executePreparedStatement functions.
      * @param Exception $exception
      * @return void
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function handleExecute(Exception $exception): void
     {
@@ -449,7 +449,7 @@ class Database
     /**
      * Function to start the transaction.
      * @return bool
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function beginTransaction(): bool
     {
@@ -466,7 +466,7 @@ class Database
     /**
      * Function to end the transaction and save the records.
      * @return bool
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function commit(): bool
     {
@@ -483,7 +483,7 @@ class Database
     /**
      * Function to end the transaction and remove the records.
      * @return bool
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function rollback(): bool
     {
@@ -500,7 +500,7 @@ class Database
     /**
      * Function to check if there are any active transactions.
      * @return bool
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function hasActiveTransactions(): bool
     {
@@ -514,7 +514,7 @@ class Database
     /**
      * Function to get the last inserted id.
      * @return string
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function lastInsertId(): string
     {
@@ -528,7 +528,7 @@ class Database
     /**
      * Function to get the number of rows affected by the query.
      * @return int
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function rowCount(): int
     {
@@ -543,7 +543,7 @@ class Database
      * Clone of function rowCount().
      * Function to get the number of rows affected by the query.
      * @return int
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function affectedRowCount(): int
     {
@@ -555,7 +555,7 @@ class Database
      * Function to fetch the results.
      * @param int $fetchStyle
      * @return array . Returns all the results of the query.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function fetch(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
@@ -574,7 +574,7 @@ class Database
      * Function to fetch all the results of the query.
      * @param int $fetchStyle
      * @return array . Returns all the results of the query.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function fetchAll(int $fetchStyle = PDO::FETCH_ASSOC): array
     {
@@ -591,7 +591,7 @@ class Database
 
     /**
      * Function to handle the PDO Exception while fetching and create new DbServicesException.
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     private function handleFetch(PDOException $exception): void
     {
@@ -627,7 +627,7 @@ class Database
      * Creates a new connection and assigns it to $connection variable.
      * Closing the connection is not possible.
      * @return void
-     * @throws \NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException
+     * @throws DbServicesException
      */
     public function close(): void
     {

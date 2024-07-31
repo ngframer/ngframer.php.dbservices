@@ -3,9 +3,9 @@
 namespace NGFramer\NGFramerPHPSQLServices;
 
 use app\config\ApplicationConfig;
-use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesError;
-use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesException;
-use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesExceptionHandler;
+use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesError;
+use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException;
+use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesExceptionHandler;
 
 if (!class_exists('app\config\ApplicationConfig')) {
     throw new DbServicesException("The project can't be used independently without NGFramer.PHP.", 4001001);

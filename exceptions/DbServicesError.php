@@ -2,7 +2,6 @@
 
 namespace NGFramer\NGFramerPHPDbServices\exceptions;
 
-use NGFramer\NGFramerPHPExceptions\exceptions\DbServicesException;
 use NGFramer\NGFramerPHPExceptions\exceptions\supportive\_BaseError;
 
 class DbServicesError extends _BaseError
@@ -14,6 +13,6 @@ class DbServicesError extends _BaseError
     public function convertToException($code, $message, string $file, int $line, array $context = []): void
     {
         // Throw the exception (DbServicesException).
-        throw new \NGFramer\NGFramerPHPExceptions\exceptions\DbServicesException($message, $code, null, 500, []);
+        throw new DbServicesException($message, $code, null, 500, []);
     }
 }

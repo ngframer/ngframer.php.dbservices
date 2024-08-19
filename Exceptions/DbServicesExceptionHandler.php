@@ -1,6 +1,6 @@
 <?php
 
-namespace NGFramer\NGFramerPHPDbServices\exceptions;
+namespace NGFramer\NGFramerPHPDbServices\Exceptions;
 
 use NGFramer\NGFramerPHPExceptions\handlers\ApiExceptionHandler;
 

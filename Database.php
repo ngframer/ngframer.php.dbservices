@@ -8,7 +8,7 @@ use PDOException;
 use PDOStatement;
 use app\config\DatabaseConfig;
 use app\config\ApplicationConfig;
-use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException;
+use NGFramer\NGFramerPHPDbServices\Exceptions\DbServicesException;
 
 
 class Database

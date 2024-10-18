@@ -1,17 +1,13 @@
 <?php
 
-namespace NGFramer\NGFramerPHPDbServices\Exceptions;
+namespace NGFramer\NGFramerPHPDbServices\exceptions;
 
+use NGFramer\NGFramerPHPExceptions\exceptions\_BaseException;
 use Throwable;
-use NGFramer\NGFramerPHPExceptions\exceptions\supportive\_BaseException;
-
 class DbServicesException extends _BaseException
 {
-    // Updated the values of this class.
-    protected $message = "The request is invalid.";
-    // TODO: Change the code based on the documentation in the upcoming time.
-    protected $code = 0;
-    protected ?Throwable $previous = null;
-    protected int $statusCode = 400;
-    protected array $details = [];
+    public function __construct($message = null, int $code = 0, ?Throwable $previous = null, int $statusCode = 500, array $details = [])
+    {
+        parent::__construct($message, $code, $previous, $statusCode, $details);
+    }
 }

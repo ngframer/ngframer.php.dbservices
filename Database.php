@@ -8,24 +8,38 @@ use PDOException;
 use PDOStatement;
 use app\config\DatabaseConfig;
 use app\config\ApplicationConfig;
-use NGFramer\NGFramerPHPDbServices\Exceptions\DbServicesException;
+use NGFramer\NGFramerPHPDbServices\exceptions\DbServicesException;
 
 
 class Database
 {
-    // Singleton instance variable of the class.
+    /**
+     * Singleton instance of the Database class.
+     * @var Database|null
+     */
     private static ?Database $instance = null;
 
-    // Using static to hold on the single instance of PDO.
+    /**
+     * PDO connection to the database.
+     * @var PDO|null
+     */
     private static ?PDO $connection = null;
 
-    // PDO connection related variable.
+    /**
+     * Query statement to execute.
+     * @var bool|PDOStatement|null
+     */
     private null|bool|PDOStatement $queryStatement = null;
+    /**
+     * Query execution status.
+     * @var bool
+     */
     private bool $queryExecutionStatus = false;
 
 
     /**
      * Function checks if the instance is already created or not, if yes, returns that instance, else returns by creating.
+     *
      * @return Database. Returns the singleton instance.
      * @throws DbServicesException
      */
@@ -36,18 +50,19 @@ class Database
             self::$instance = new self();
         }
 
-        // Only when instance is available but connection is destroyed.
+        // Only when an instance is available but the connection is destroyed.
         if (empty(self::$connection)) {
             self::$instance->connect();
         }
 
-        // Finally the instance will always have a PDO connection to operate on, return it.
+        // Finally, the instance will always have a PDO connection to operate on, return it.
         return self::$instance;
     }
 
 
     /**
-     * Private constructor to make sure, no more of it's instance can be created.
+     * Private constructor to make sure no more of it's instance can be created.
+     *
      * @return void
      * @throws DbServicesException
      */
@@ -60,6 +75,7 @@ class Database
     /**
      * Function connects to the database using PDO.
      * Connects to the database only if the connection is not already created.
+     *
      * @return void
      * @throws DbServicesException
      */
@@ -115,6 +131,7 @@ class Database
 
     /**
      * Function to check if the connection exists.
+     *
      * @return bool
      */
     private function checkConnection(): bool
@@ -128,6 +145,7 @@ class Database
 
     /**
      * Function to prepare the queryStatement.
+     *
      * @param string|null $queryStatement . Query to prepare for the execution.
      * @param array $options . Optional parameter to pass options to the prepare function.
      * @return Database|null
@@ -162,6 +180,7 @@ class Database
      * Function to bind multiple parameters to the queryStatement.
      *  Uses referenced variable names to bind.
      *  @param array $args . Array of parameters to bind.
+     *
      * @throws DbServicesException
      */
     public function bindParams(array &$args): ?static
@@ -198,6 +217,7 @@ class Database
      * Function to bind the parameters to the queryStatement.
      * To bind multiple parameters at once, use bindValues/bindParams.
      * Uses referenced variable names to bind.
+     *
      * @param string $column
      * @param $value
      * @param int $type
@@ -258,8 +278,8 @@ class Database
 
 
     /**
-     * Function to bind single value to the queryStatement.
-     * Can bind only single value at once.
+     * Function to bind a single value to the queryStatement.
+     * Can bind only a single value at once.
      * @param string $column
      * @param $value
      * @param int $type
@@ -285,6 +305,8 @@ class Database
 
 
     /**
+     * Function to handle the exception from the bindParam and bindValue functions.
+     *
      * @param PDOException $exception
      * @return void
      * @throws DbServicesException
@@ -305,7 +327,8 @@ class Database
 
 
     /**
-     * Function checks if the arguments of all the elements of the array are arrays or something else.
+     * Function checks if elements of array are arrays or something else.
+     *
      * @param array $args
      * @return bool
      */
@@ -321,7 +344,8 @@ class Database
     /**
      * Function to execute the query or the query statement.
      * Allows the execution of both the prepared execution type and direct execution type.
-     * @param string|null $queryStatement Query to prepare for the execution, optional. Only in case of direct execution type.
+     *
+     * @param string|null $queryStatement Query to prepare for the execution, optional. Only in the case of a direct execution type.
      * @return Database
      * @throws DbServicesException
      */
@@ -343,6 +367,7 @@ class Database
 
     /**
      * Execute a direct query statement.
+     *
      * @param string $queryStatement
      * @throws DbServicesException
      */
@@ -359,6 +384,7 @@ class Database
 
     /**
      * Execute a prepared statement.
+     *
      * @throws DbServicesException
      */
     private function executePreparedStatement(): void
@@ -373,6 +399,7 @@ class Database
 
     /**
      * This function will handle the exception from the executeDirectQuery and executePreparedStatement functions.
+     *
      * @param Exception $exception
      * @return void
      * @throws DbServicesException
@@ -448,6 +475,7 @@ class Database
 
     /**
      * Function to start the transaction.
+     *
      * @return bool
      * @throws DbServicesException
      */
@@ -465,6 +493,7 @@ class Database
 
     /**
      * Function to end the transaction and save the records.
+     *
      * @return bool
      * @throws DbServicesException
      */
@@ -482,6 +511,7 @@ class Database
 
     /**
      * Function to end the transaction and remove the records.
+     *
      * @return bool
      * @throws DbServicesException
      */
@@ -513,6 +543,7 @@ class Database
 
     /**
      * Function to get the last inserted id.
+     *
      * @return string
      * @throws DbServicesException
      */
@@ -527,6 +558,7 @@ class Database
 
     /**
      * Function to get the number of rows affected by the query.
+     *
      * @return int
      * @throws DbServicesException
      */
@@ -542,6 +574,7 @@ class Database
     /**
      * Clone of function rowCount().
      * Function to get the number of rows affected by the query.
+     *
      * @return int
      * @throws DbServicesException
      */
@@ -553,6 +586,7 @@ class Database
 
     /**
      * Function to fetch the results.
+     *
      * @param int $fetchStyle
      * @return array . Returns all the results of the query.
      * @throws DbServicesException
@@ -572,6 +606,7 @@ class Database
 
     /**
      * Function to fetch all the results of the query.
+     *
      * @param int $fetchStyle
      * @return array . Returns all the results of the query.
      * @throws DbServicesException
@@ -591,6 +626,7 @@ class Database
 
     /**
      * Function to handle the PDO Exception while fetching and create new DbServicesException.
+     *
      * @throws DbServicesException
      */
     private function handleFetch(PDOException $exception): void
@@ -623,9 +659,10 @@ class Database
     /**
      * Use this with caution. Can make the application unstable if used incorrectly.
      * ==========================>
-     * Use this only when previous connection can't be used for another transaction.
-     * Creates a new connection and assigns it to $connection variable.
+     * Use this only when the previous connection can't be used for another transaction.
+     * Creates a new connection and assigns it to the $connection variable.
      * Closing the connection is not possible.
+     *
      * @return void
      * @throws DbServicesException
      */

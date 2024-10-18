@@ -92,7 +92,7 @@ class Database
             ];
 
             // Check if the DatabaseConfig class exists or not.
-            if (!class_exists('app/config/DatabaseConfig')) {
+            if (!class_exists('app\config\DatabaseConfig')) {
                 throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4001001);
             }
 

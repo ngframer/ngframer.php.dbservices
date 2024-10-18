@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aea44e326789ac803ff4e079a2b1aa3b",
+    "content-hash": "c7fda712f75e1e637ac86fe23a154f19",
     "packages": [
         {
             "name": "ngframer/ngframer.php.exceptions",
-            "version": "v1.3.0",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ngframer/ngframer.php.exceptions.git",
-                "reference": "eac95fe000ee18b18461dfb4da4be4e0cd380cf6"
+                "reference": "079fec805a03ee6fd374a691fe2c28d76b24a3d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/eac95fe000ee18b18461dfb4da4be4e0cd380cf6",
-                "reference": "eac95fe000ee18b18461dfb4da4be4e0cd380cf6",
+                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/079fec805a03ee6fd374a691fe2c28d76b24a3d4",
+                "reference": "079fec805a03ee6fd374a691fe2c28d76b24a3d4",
                 "shasum": ""
             },
             "require": {
@@ -50,9 +50,9 @@
             "description": "Exception and Exception handler for all the NGFramer projects and mostly used Exceptions and Exception handlers.",
             "support": {
                 "issues": "https://github.com/ngframer/ngframer.php.exceptions/issues",
-                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v1.3.0"
+                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v2.0.0"
             },
-            "time": "2024-07-31T16:45:47+00:00"
+            "time": "2024-10-17T15:39:46+00:00"
         }
     ],
     "packages-dev": [],

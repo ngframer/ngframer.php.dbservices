@@ -19,6 +19,6 @@
   ],
   "require": {
     "ext-pdo": "*",
-    "ngframer/ngframer.php.exceptions": "~v1.3.0"
+    "ngframer/ngframer.php.exceptions": "~v2.0.0"
   }
 }

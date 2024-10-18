@@ -327,7 +327,7 @@ class Database
 
 
     /**
-     * Function checks if elements of array are arrays or something else.
+     * Function checks if elements of the array are arrays or something else.
      *
      * @param array $args
      * @return bool

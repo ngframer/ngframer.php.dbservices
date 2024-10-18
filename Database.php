@@ -96,8 +96,9 @@ class Database
                 throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4001001);
             }
 
-            if (!ApplicationConfig::exists('db_dsn') || !ApplicationConfig::exists('db_user') || !ApplicationConfig::exists('db_pass')) {
-                throw new DbServicesException("Requested variable are not set.", 4002001);
+            // Check if the get method exists or not.
+            if (!method_exists('app\config\DatabaseConfig', 'get')) {
+                throw new DbServicesException("Requested methods are not availabe on the class.", 4001002);
             }
 
             try {

@@ -101,11 +101,17 @@ class Database
                 throw new DbServicesException("Requested methods are not availabe on the class.", 4001002);
             }
 
+            // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
             try {
-                // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
-                $db_dsn = DatabaseConfig::get('db_dsn');
-                $db_user = DatabaseConfig::get('db_user');
-                $db_pass = DatabaseConfig::get('db_pass');
+                // Try to get the DatabaseConfig.
+                try{
+                    $db_dsn = DatabaseConfig::get('db_dsn');
+                    $db_user = DatabaseConfig::get('db_user');
+                    $db_pass = DatabaseConfig::get('db_pass');
+                } catch (Exception $e) {
+                    throw new DbServicesException("All the requested variables do not exist in ApplicationConfig.", 4002001);
+                }
+                // If all the variables exist in the DatabaseConfig.
                 self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
             } catch (PDOException $exception) {
                 // Check the code of the exception.

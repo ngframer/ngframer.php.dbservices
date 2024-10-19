@@ -2,6 +2,7 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
+use NGFramer\NGFramerPHPSQLServices\Exceptions\SqlServicesException;
 use PDO;
 use Exception;
 use PDOException;
@@ -104,7 +105,7 @@ class Database
             // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
             try {
                 // Try to get the DatabaseConfig.
-                try{
+                try {
                     $db_dsn = DatabaseConfig::get('db_dsn');
                     $db_user = DatabaseConfig::get('db_user');
                     $db_pass = DatabaseConfig::get('db_pass');
@@ -186,7 +187,7 @@ class Database
     /**
      * Function to bind multiple parameters to the queryStatement.
      *  Uses referenced variable names to bind.
-     *  @param array $args . Array of parameters to bind.
+     * @param array $args . Array of parameters to bind.
      *
      * @throws DbServicesException
      */
@@ -196,25 +197,29 @@ class Database
         if (!$this->queryStatement) {
             throw new DbServicesException("No queryStatement to bind parameters to.", 4008001);
         }
+
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
             throw new DbServicesException("No parameters passed to bind to queryStatement.", 4009001);
         }
-        // If all elements of the array are arrays, then run bindParam function with arg.
-        if ($this->areAllElementsArray($args)) {
-            foreach ($args as $arg) {
-                $column = $arg['column'] ?? $arg[0];
-                $value = $arg['value'] ?? $arg[1];
-                $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
-                $this->bindParam($column, $value, $type);
-            }
-        } // If all the elements of thr array ($args) are not array/s.
-        else {
-            $column = $args['column'] ?? $args[0];
-            $value = $args['value'] ?? $args[1];
-            $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-            $this->queryStatement->bindParam($column, $value, $type);
+
+        // Check if all elements are arrays.
+        if (!$this->areAllElementsArray($args)) {
+            throw new DbServicesException("Invalid format of data passed to bind.", 4009002);
         }
+
+        // Loop through the args array to bind the parameters.
+        foreach ($args as $arg) {
+            // Get values for the column, value, and type.
+            $column = $arg['name'] ?? $arg[0];
+            $value = $arg['value'] ?? $arg[1];
+            $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
+            $type = $this->resolveType($type);
+
+            // Now bind the parameters.
+            $this->bindParam($column, $value, $type);
+        }
+
         // Return for function chaining.
         return $this;
     }
@@ -254,33 +259,61 @@ class Database
      * @param array $args . Array of parameters to bind.
      * @throws DbServicesException
      */
-    public function bindValues(array &$args): ?static
+    public function bindValues(array $args): ?static
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
             throw new DbServicesException("No queryStatement to bind parameters to.", 4010001);
         }
+
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
             throw new DbServicesException("No parameters passed to bind to queryStatement.", 4011001);
         }
-        // If all elements of the array are arrays, then run bindParam function with arg.
-        if ($this->areAllElementsArray($args)) {
-            foreach ($args as $arg) {
-                $column = $arg['column'] ?? $arg[0];
-                $value = $arg['value'] ?? $arg[1];
-                $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
-                $this->bindValue($column, $value, $type);
-            }
-        } // If all the elements of thr array ($args) are not array/s.
-        else {
-            $column = $args['column'] ?? $args[0];
-            $value = $args['value'] ?? $args[1];
-            $type = $args['type'] ?? $args[2] ?? PDO::PARAM_STR;
-            $this->queryStatement->bindValue($column, $value, $type);
+
+        // Check if all elements are arrays.
+        if (!$this->areAllElementsArray($args)) {
+            throw new DbServicesException("Invalid format of data passed to bind.", 4011002);
         }
+
+        // Loop through the args array to bind the values.
+        foreach ($args as $arg) {
+            // Get values for the column, value, and type.
+            $column = $arg['name'] ?? $arg[0];
+            $value = $arg['value'] ?? $arg[1];
+            $type = $arg['type'] ?? $arg[2] ?? PDO::PARAM_STR;
+            $type = $this->resolveType($type);
+
+            // Now bind the values.
+            $this->bindValue($column, $value, $type);
+        }
+
         // Return for function chaining.
         return $this;
+    }
+
+
+    /**
+     * Resolves the data type for binding to the prepared statement.
+     *
+     * @param mixed $type.
+     * @return int Returns the corresponding PDO::PARAM_* constant for the given type
+     * @throws SqlServicesException
+     */
+    private function resolveType($type): int
+    {
+        // Check the type of the value and return corresponding PDO constant.
+        if ($type === 'string' || $type === PDO::PARAM_STR) {
+            return PDO::PARAM_STR;
+        } elseif ($type === 'integer' || $type === 'int' || $type === PDO::PARAM_INT) {
+            return PDO::PARAM_INT;
+        } elseif ($type === 'boolean' || $type === 'bool' || $type === PDO::PARAM_BOOL) {
+            return PDO::PARAM_BOOL;
+        } elseif ($type === 'null' || $type === PDO::PARAM_NULL) {
+            return PDO::PARAM_NULL;
+        } else {
+            throw new SqlServicesException("Invalid value type to bind.", 4012001);
+        }
     }
 
 
@@ -295,6 +328,7 @@ class Database
      */
     public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {
+        error_log("Process check");
         if (!str_starts_with($column, ":")) {
             $column = ":" . $column;
         }

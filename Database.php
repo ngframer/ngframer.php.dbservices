@@ -328,7 +328,6 @@ class Database
      */
     public function bindValue(string $column, $value, int $type = PDO::PARAM_STR): static
     {
-        error_log("Process check");
         if (!str_starts_with($column, ":")) {
             $column = ":" . $column;
         }

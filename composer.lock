@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c7fda712f75e1e637ac86fe23a154f19",
+    "content-hash": "6b6077bf73d0b6ca8665e30ffcc565db",
     "packages": [
         {
             "name": "ngframer/ngframer.php.exceptions",
-            "version": "v2.0.0",
+            "version": "v2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ngframer/ngframer.php.exceptions.git",
-                "reference": "079fec805a03ee6fd374a691fe2c28d76b24a3d4"
+                "reference": "1519f2aa0b89ddaae30252fd52262594f0a8217f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/079fec805a03ee6fd374a691fe2c28d76b24a3d4",
-                "reference": "079fec805a03ee6fd374a691fe2c28d76b24a3d4",
+                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/1519f2aa0b89ddaae30252fd52262594f0a8217f",
+                "reference": "1519f2aa0b89ddaae30252fd52262594f0a8217f",
                 "shasum": ""
             },
             "require": {
@@ -50,20 +50,20 @@
             "description": "Exception and Exception handler for all the NGFramer projects and mostly used Exceptions and Exception handlers.",
             "support": {
                 "issues": "https://github.com/ngframer/ngframer.php.exceptions/issues",
-                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v2.0.0"
+                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v2.0.3"
             },
-            "time": "2024-10-17T15:39:46+00:00"
+            "time": "2024-10-27T10:09:19+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "ext-pdo": "*"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

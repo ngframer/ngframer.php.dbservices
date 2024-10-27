@@ -2,6 +2,7 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
+use NGFramer\NGFramerPHPExceptions\exceptions\BaseException;
 use PDO;
 use Exception;
 use PDOException;
@@ -108,7 +109,7 @@ class Database
                     $db_dsn = DatabaseConfig::get('db_dsn');
                     $db_user = DatabaseConfig::get('db_user');
                     $db_pass = DatabaseConfig::get('db_pass');
-                } catch (Exception $e) {
+                } catch (BaseException $exception) {
                     throw new DbServicesException("All the requested variables do not exist in ApplicationConfig.", 4002001, 'dbservices.databaseConfigVariablesNotSet');
                 }
                 // If all the variables exist in the DatabaseConfig.

@@ -94,12 +94,12 @@ class Database
 
             // Check if the DatabaseConfig class exists or not.
             if (!class_exists('app\config\DatabaseConfig')) {
-                throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4001001, 'dbservices.databaseConfigClassNotFound');
+                throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4001001, 'dbservices.config.classNotFound');
             }
 
             // Check if the get method exists or not.
             if (!method_exists('app\config\DatabaseConfig', 'get')) {
-                throw new DbServicesException("Requested methods are not availabe on the class.", 4001002, 'dbservices.databaseConfigMethodNotFound');
+                throw new DbServicesException("Requested methods are not available on the class.", 4001002, 'dbservices.config.methodNotFound');
             }
 
             // Define the DB_DSN, DB_USER, and DB_PASS in the /config/database.php file of the project/root directory.
@@ -109,28 +109,29 @@ class Database
                     $db_dsn = DatabaseConfig::get('db_dsn');
                     $db_user = DatabaseConfig::get('db_user');
                     $db_pass = DatabaseConfig::get('db_pass');
-                } catch (BaseException $exception) {
-                    throw new DbServicesException("All the requested variables do not exist in ApplicationConfig.", 4002001, 'dbservices.databaseConfigVariablesNotSet');
+                } catch (BaseException) {
+                    throw new DbServicesException("All the requested variables do not exist in ApplicationConfig.", 4002001, 'dbservices.config.variablesNotSet');
                 }
                 // If all the variables exist in the DatabaseConfig.
                 self::$connection = new PDO($db_dsn, $db_user, $db_pass, $pdoAttributes);
             } catch (PDOException $exception) {
                 // Check the code of the exception.
-                if ($exception->getCode() == 1045) {
-                    throw new DbServicesException("Invalid username or password.", 4004001, 'dbservices.invalidUsernameOrPassword');
-                } elseif ($exception->getCode() == 1049) {
-                    throw new DbServicesException("Database doesn't exist.", 4004002, 'dbservices.databaseDoesNotExist');
-                } elseif ($exception->getCode() == 2002) {
-                    throw new DbServicesException("Connection refused to database server.", 4004003, 'dbservices.connectionRefused');
-                } elseif ($exception->getCode() == '08001') {
-                    throw new DbServicesException("SQL Client unable to establish a connection.", 4005001, 'dbservices.unableToEstablishConnection');
-                } elseif ($exception->getCode() == '08003') {
-                    throw new DbServicesException("The connection does not exists. Visit error_log for details.", 4005002, 'dbservices.connectionDoesNotExist');
-                } elseif ($exception->getCode() == '08004') {
-                    throw new DbServicesException("The connection has been failed. Visit error_log for details.", 4005003, 'dbservices.connectionFailed');
-                } else {
-                    error_log("The exception caught is " . json_encode($exception) . ". New Code: 4004004 (4M4K4)");
-                    throw new DbServicesException("Database connection failed of unknown reason.", 4004004, 'dbservices.unknownDatabaseConnectionError');
+                switch ($exception->getCode()) {
+                    case 1045:
+                        throw new DbServicesException("Invalid username or password.", 4004001, 'dbservices.connection.invalidCredentials');
+                    case 1049:
+                        throw new DbServicesException("Database doesn't exist.", 4047001, 'dbservices.connection.databaseNotFound');
+                    case 2002:
+                        throw new DbServicesException("Connection refused to database server.", 4004002, 'dbservices.connection.connectionRefused');
+                    case '08001':
+                        throw new DbServicesException("SQL Client unable to establish a connection.", 4005001, 'dbservices.connection.unableToEstablish');
+                    case '08003':
+                        throw new DbServicesException("The connection does not exist. Visit error_log for details.", 4005002, 'dbservices.connection.connectionNotExists');
+                    case '08004':
+                        throw new DbServicesException("The connection has been failed. Visit error_log for details.", 4005003, 'dbservices.connection.connectionFailed');
+                    default:
+                        error_log("PDOException: " . $exception->getMessage() . " - Code: " . $exception->getCode());
+                        throw new DbServicesException("Database connection failed for an unknown reason.", 4020001, 'dbservices.connection.unknownError');
                 }
             }
         }
@@ -144,10 +145,7 @@ class Database
      */
     private function checkConnection(): bool
     {
-        if (self::$connection instanceof PDO && !empty(self::$connection)) {
-            return true;
-        }
-        return false;
+        return self::$connection instanceof PDO && !empty(self::$connection);
     }
 
 
@@ -162,24 +160,22 @@ class Database
     public function prepare(string $queryStatement = null, array $options = []): ?static
     {
         if (empty($queryStatement)) {
-            throw new DbServicesException("No query to prepare.", 4007001, 'dbservices.noQueryToPrepare');
+            throw new DbServicesException("No query to prepare.", 4007001, 'dbservices.query.noQueryToPrepare');
         }
 
-        // Check for any possible error handling.
         try {
             $this->queryStatement = self::$connection->prepare($queryStatement, $options);
         } catch (PDOException $exception) {
-            if ($exception->getCode() == 42000) {
-                throw new DbServicesException("Syntax error or Access violation.", 4022001, 'dbservices.syntaxErrorOrAccessViolation');
-            } elseif ($exception->getCode() == '42S02') {
-                throw new DbServicesException("Base table or view not found.", 4023001, 'dbservices.baseTableOrViewNotFound');
-            } else {
-                error_log("The exception caught is " . json_encode($exception) . ". New Code: 4024001 (4M24K1)");
-                throw new DbServicesException("Something went wrong. Visit error_log for details.", 4024001, 'dbservices.unknownError');
+            switch ($exception->getCode()) {
+                case 42000:
+                    throw new DbServicesException("Syntax error or Access violation.", 4022001, 'dbservices.query.syntaxErrorOrAccessViolation');
+                case '42S02':
+                    throw new DbServicesException("Base table or view not found.", 4023001, 'dbservices.query.baseTableOrViewNotFound');
+                default:
+                    error_log("PDOException in prepare: " . $exception->getMessage() . " - Code: " . $exception->getCode() . " - Query: " . $queryStatement);
+                    throw new DbServicesException("Something went wrong during query preparation. Visit error_log for details.", 4007002, 'dbservices.query.unknownError');
             }
         }
-
-        // Return for function chaining.
         return $this;
     }
 
@@ -200,12 +196,12 @@ class Database
 
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4009001, 'dbservices.noParametersToBind');
+            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4008002, 'dbservices.noParametersToBind');
         }
 
         // Check if all elements are arrays.
         if (!$this->areAllElementsArray($args)) {
-            throw new DbServicesException("Invalid format of data passed to bind.", 4009002, 'dbservices.invalidDataFormat');
+            throw new DbServicesException("Invalid format of data passed to bind.", 4015001, 'dbservices.invalidDataFormat');
         }
 
         // Loop through the args array to bind the parameters.
@@ -263,17 +259,17 @@ class Database
     {
         // If queryStatement is false, then throw an exception.
         if (!$this->queryStatement) {
-            throw new DbServicesException("No queryStatement to bind parameters to.", 4010001, 'dbservices.noQueryStatementToBind');
+            throw new DbServicesException("No queryStatement to bind parameters to.", 4008003, 'dbservices.noQueryStatementToBind.2');
         }
 
         // If there are no parameters to bind to the statement.
         if (count($args) === 0) {
-            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4011001, 'dbservices.noParametersToBind');
+            throw new DbServicesException("No parameters passed to bind to queryStatement.", 4008004, 'dbservices.noParametersToBind.2');
         }
 
         // Check if all elements are arrays.
         if (!$this->areAllElementsArray($args)) {
-            throw new DbServicesException("Invalid format of data passed to bind.", 4011002, 'dbservices.invalidDataFormat');
+            throw new DbServicesException("Invalid format of data passed to bind.", 4015002, 'dbservices.invalidDataFormat.2');
         }
 
         // Loop through the args array to bind the values.
@@ -290,30 +286,6 @@ class Database
 
         // Return for function chaining.
         return $this;
-    }
-
-
-    /**
-     * Resolves the data type for binding to the prepared statement.
-     *
-     * @param mixed $type.
-     * @return int Returns the corresponding PDO::PARAM_* constant for the given type
-     * @throws DbServicesException
-     */
-    private function resolveType($type): int
-    {
-        // Check the type of the value and return the corresponding PDO constant.
-        if ($type === 'string' || $type === PDO::PARAM_STR) {
-            return PDO::PARAM_STR;
-        } elseif ($type === 'integer' || $type === 'int' || $type === PDO::PARAM_INT) {
-            return PDO::PARAM_INT;
-        } elseif ($type === 'boolean' || $type === 'bool' || $type === PDO::PARAM_BOOL) {
-            return PDO::PARAM_BOOL;
-        } elseif ($type === 'null' || $type === PDO::PARAM_NULL) {
-            return PDO::PARAM_NULL;
-        } else {
-            throw new DbServicesException("Invalid value type to bind.", 4012001, 'dbservices.invalidValueType');
-        }
     }
 
 
@@ -345,6 +317,25 @@ class Database
 
 
     /**
+     * Resolves the data type for binding to the prepared statement.
+     *
+     * @param mixed $type .
+     * @return int Returns the corresponding PDO::PARAM_* constant for the given type
+     * @throws DbServicesException
+     */
+    private function resolveType(mixed $type): int
+    {
+        return match ($type) {
+            'string', PDO::PARAM_STR => PDO::PARAM_STR,
+            'integer', 'int', PDO::PARAM_INT => PDO::PARAM_INT,
+            'boolean', 'bool', PDO::PARAM_BOOL => PDO::PARAM_BOOL,
+            'null', PDO::PARAM_NULL => PDO::PARAM_NULL,
+            default => throw new DbServicesException("Invalid value type to bind.", 4016001, 'dbservices.bind.invalidValueType'),
+        };
+    }
+
+
+    /**
      * Function to handle the exception from the bindParam and bindValue functions.
      *
      * @param PDOException $exception
@@ -353,15 +344,16 @@ class Database
      */
     private function handleBind(PDOException $exception): void
     {
-        if ($exception->getCode() == 22001) {
-            throw new DbServicesException("Data too long to insert or update.", 4015001, 'dbservices.dataTooLong');
-        } elseif ($exception->getCode() == 22007) {
-            throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4016001, 'dbservices.invalidDateTimeValue');
-        } elseif ($exception->getCode() == 'HY093') {
-            throw new DbServicesException("Invalid parameter number.", 4026001, 'dbservices.invalidParameterNumber');
-        } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4017001 (4M17K1)");
-            throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4017001, 'dbservices.unknownError');
+        switch ($exception->getCode()) {
+            case 22001:
+                throw new DbServicesException("Data too long to insert or update.", 4025001, 'dbservices.bind.dataTooLong');
+            case 22007:
+                throw new DbServicesException("Invalid datetime/timestamp value is invalid.", 4016002, 'dbservices.bind.invalidDateTime');
+            case 'HY093':
+                throw new DbServicesException("Invalid parameter number.", 4048001, 'dbservices.bind.invalidParameterNumber');
+            default:
+                error_log("PDOException in bind: " . $exception->getMessage() . " - Code: " . $exception->getCode());
+                throw new DbServicesException("Something went wrong while binding. Visit error_log for details.", 4008005, 'dbservices.bind.unknownError');
         }
     }
 
@@ -397,7 +389,7 @@ class Database
         } elseif ($queryStatement === null && $this->queryStatement !== null) {
             $this->executePreparedStatement();
         } else {
-            throw new DbServicesException("Invalid or no queryStatement to execute.", 4012001, 'dbservices.invalidQueryStatement');
+            throw new DbServicesException("Invalid or no queryStatement to execute.", 4012001, 'dbservices.execute.invalidQueryStatement');
         }
 
         // Return the object for function chaining.
@@ -417,7 +409,7 @@ class Database
             $this->queryStatement = self::$connection->query($queryStatement);
             $this->queryExecutionStatus = $this->queryStatement !== false;
         } catch (PDOException $exception) {
-            $this->handleExecute($exception);
+            $this->handleExecute($exception, $queryStatement);
         }
     }
 
@@ -432,7 +424,7 @@ class Database
         try {
             $this->queryExecutionStatus = $this->queryStatement->execute();
         } catch (PDOException $exception) {
-            $this->handleExecute($exception);
+            $this->handleExecute($exception, $this->queryStatement->queryString);
         }
     }
 
@@ -441,74 +433,78 @@ class Database
      * This function will handle the exception from the executeDirectQuery and executePreparedStatement functions.
      *
      * @param Exception $exception
+     * @param string|null $queryStatement The query that caused the exception (for logging).
      * @return void
      * @throws DbServicesException
      */
-    private function handleExecute(Exception $exception): void
+    private function handleExecute(Exception $exception, ?string $queryStatement = null): void
     {
-        if ($exception->getCode() == 2006) {
-            throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4030001, 'dbservices.lostConnection');
-        } elseif ($exception->getCode() == 2013) {
-            throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4031001, 'dbservices.lostConnectionAtEnd');
-        } elseif ($exception->getCode() == 22000) {
-            throw new DbServicesException("General data error. Visit error_log for details.", 4036001, 'dbservices.generalDataError');
-        } elseif ($exception->getCode() == 22001) {
-            throw new DbServicesException("Data too long to insert or update.", 4025001, 'dbservices.dataTooLong');
-        } elseif ($exception->getCode() == 22002) {
-            throw new DbServicesException("Indicator variable required not supplied.", 4032001, 'dbservices.indicatorVariableRequired');
-        } elseif ($exception->getCode() == 22003) {
-            throw new DbServicesException("Data (numeric) value out of range.", 4027001, 'dbservices.dataValueOutOfRange');
-        } elseif ($exception->getCode() == 22004) {
-            throw new DbServicesException("Null value not allowed in the column.", 4033001, 'dbservices.nullValueNotAllowed');
-        } elseif ($exception->getCode() == 22005) {
-            throw new DbServicesException("Error in assignment of value to parameter.", 4037001, 'dbservices.errorInAssignment');
-        } elseif ($exception->getCode() == 22007) {
-            throw new DbServicesException("Invalid date or time format.", 4038001, 'dbservices.invalidDateTimeFormat');
-        } elseif ($exception->getCode() == 22008) {
-            throw new DbServicesException("Date time field value out of range.", 4039001, 'dbservices.dateTimeFieldOutOfRange');
-        } elseif ($exception->getCode() == 23000) {
-            throw new DbServicesException("Integrity constraint violation.", 4019001, 'dbservices.integrityConstraintViolation');
-        } elseif ($exception->getCode() == 23502) {
-            throw new DbServicesException("Not Null Violation.", 4040001, 'dbservices.notNullViolation');
-        } elseif ($exception->getCode() == 23503) {
-            throw new DbServicesException("Foreign Key Violation.", 4041001, 'dbservices.foreignKeyViolation');
-        } elseif ($exception->getCode() == 23505) {
-            throw new DbServicesException("Unique Key Violation.", 4042001, 'dbservices.uniqueKeyViolation');
-        } elseif ($exception->getCode() == 40001) {
-            throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4028001, 'dbservices.deadlockCondition');
-        } elseif ($exception->getCode() == 42000) {
-            throw new DbServicesException("Syntax error or Access violation.", 4018001, 'dbservices.syntaxErrorOrAccessViolation');
-        } elseif ($exception->getCode() == 42501) {
-            throw new DbServicesException("Insufficient privilege. Visit error_log for details.", 4026001, 'dbservices.insufficientPrivilege');
-        } elseif ($exception->getCode() == 42601) {
-            throw new DbServicesException("Syntax error. Visit error_log for details.", 4022001, 'dbservices.syntaxError');
-        } elseif ($exception->getCode() == 42602) {
-            throw new DbServicesException("Invalid cursor name. Visit error_log for details.", 4043001, 'dbservices.invalidCursorName');
-        } elseif ($exception->getCode() == 42622) {
-            throw new DbServicesException("Too long identifier name.", 4044001, 'dbservices.tooLongIdentifierName');
-        } elseif ($exception->getCode() == 42701) {
-            throw new DbServicesException("The column name already exists.", 4045001, 'dbservices.columnNameAlreadyExists');
-        } elseif ($exception->getCode() == 42703) {
-            throw new DbServicesException("Undefined column.", 4046001, 'dbservices.undefinedColumn');
-        } elseif ($exception->getCode() == '42P01') {
-            throw new DbServicesException("Table or view not found.", 4047001, 'dbservices.tableOrViewNotFound');
-        } elseif ($exception->getCode() == '42P02') {
-            throw new DbServicesException("Undefined parameter.", 4048001, 'dbservices.undefinedParameter');
-        } elseif ($exception->getCode() == '42P03') {
-            throw new DbServicesException("Duplicate cursor.", 4049001, 'dbservices.duplicateCursor');
-        } elseif ($exception->getCode() == '42P04') {
-            throw new DbServicesException("Duplicate database.", 4050001, 'dbservices.duplicateDatabase');
-        } elseif ($exception->getCode() == 'HY000') {
-            throw new DbServicesException("Unknown general error. Visit error_log for details.", 4020001, 'dbservices.unknownGeneralError');
-        } elseif ($exception->getCode() == 'HY009') {
-            throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4029001, 'dbservices.errorInNumberOfDataToBind');
-        } elseif ($exception->getCode() == 'HY013') {
-            throw new DbServicesException("Memory management error. Visit error_log for details.", 4034001, 'dbservices.memoryManagementError');
-        } elseif ($exception->getCode() == 'HY014') {
-            throw new DbServicesException("Limit on the number of handles exceeded.", 4035001, 'dbservices.limitOnNumberOfHandlesExceeded');
-        } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4021001 (4M21K1)");
-            throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4021001, 'dbservices.unknownError');
+
+        switch ($exception->getCode()) {
+            case 2006:
+                throw new DbServicesException("Lost connection to server during query. Visit error_log for details.", 4012002, 'dbservices.execute.lostConnection');
+            case 2013:
+                throw new DbServicesException("Lost connection to server at query end. Visit error_log for details.", 4012003, 'dbservices.execute.lostConnectionAtEnd');
+            case 22000:
+                throw new DbServicesException("General data error. Visit error_log for details.", 4015003, 'dbservices.execute.generalDataError');
+            case 22001:
+                throw new DbServicesException("Data too long to insert or update.", 4025002, 'dbservices.execute.dataTooLong');
+            case 22002:
+                throw new DbServicesException("Indicator variable required not supplied.", 4015004, 'dbservices.execute.indicatorVariableRequired');
+            case 22003:
+                throw new DbServicesException("Data (numeric) value out of range.", 4016003, 'dbservices.execute.dataValueOutOfRange');
+            case 22004:
+                throw new DbServicesException("Null value not allowed in the column.", 4019001, 'dbservices.execute.nullValueNotAllowed');
+            case 22005:
+                throw new DbServicesException("Error in assignment of value to parameter.", 4015005, 'dbservices.execute.errorInAssignment');
+            case 22007:
+                throw new DbServicesException("Invalid date or time format.", 4016004, 'dbservices.execute.invalidDateTimeFormat');
+            case 22008:
+                throw new DbServicesException("Date time field value out of range.", 4016005, 'dbservices.execute.dateTimeFieldOutOfRange');
+            case 23000:
+                throw new DbServicesException("Integrity constraint violation.", 4019002, 'dbservices.execute.integrityConstraintViolation');
+            case 23502:
+                throw new DbServicesException("Not Null Violation.", 4019003, 'dbservices.execute.notNullViolation');
+            case 23503:
+                throw new DbServicesException("Foreign Key Violation.", 4019004, 'dbservices.execute.foreignKeyViolation');
+            case 23505:
+                throw new DbServicesException("Unique Key Violation.", 4019005, 'dbservices.execute.uniqueKeyViolation');
+            case 40001:
+                throw new DbServicesException("Deadlock condition found. Visit error_log for details.", 4012004, 'dbservices.execute.deadlockCondition');
+            case 42000:
+                throw new DbServicesException("Syntax error or Access violation.", 4022002, 'dbservices.execute.syntaxErrorOrAccessViolation.2');
+            case 42501:
+                throw new DbServicesException("Insufficient privilege. Visit error_log for details.", 4026001, 'dbservices.execute.insufficientPrivilege');
+            case 42601:
+                throw new DbServicesException("Syntax error. Visit error_log for details.", 4022003, 'dbservices.execute.syntaxError');
+            case 42602:
+                throw new DbServicesException("Invalid cursor name. Visit error_log for details.", 4043001, 'dbservices.execute.invalidCursorName');
+            case 42622:
+                throw new DbServicesException("Too long identifier name.", 4044001, 'dbservices.execute.tooLongIdentifierName');
+            case 42701:
+                throw new DbServicesException("The column name already exists.", 4045001, 'dbservices.execute.columnNameAlreadyExists');
+            case 42703:
+                throw new DbServicesException("Undefined column.", 4045002, 'dbservices.execute.undefinedColumn');
+            case '42P01':
+                throw new DbServicesException("Table or view not found.", 4047002, 'dbservices.execute.tableOrViewNotFound');
+            case '42P02':
+                throw new DbServicesException("Undefined parameter.", 4048002, 'dbservices.execute.undefinedParameter');
+            case '42P03':
+                throw new DbServicesException("Duplicate cursor.", 4043002, 'dbservices.execute.duplicateCursor');
+            case '42P04':
+                throw new DbServicesException("Duplicate database.", 4047003, 'dbservices.execute.duplicateDatabase');
+            case 'HY000':
+                throw new DbServicesException("Unknown general error. Visit error_log for details.", 4020002, 'dbservices.execute.unknownGeneralError');
+            case 'HY009':
+                throw new DbServicesException("Error in number of data to bind. Visit error_log for details.", 4008006, 'dbservices.execute.errorInNumberOfDataToBind');
+            case 'HY013':
+                throw new DbServicesException("Memory management error. Visit error_log for details.", 4034001, 'dbservices.execute.memoryManagementError');
+            case 'HY014':
+                throw new DbServicesException("Limit on the number of handles exceeded.", 4035001, 'dbservices.execute.limitOnNumberOfHandlesExceeded');
+            default:
+                error_log("PDOException in execute: " . $exception->getMessage());
+                error_log("The query statement was " . $queryStatement ? " - Query: " . $queryStatement : "");
+                throw new DbServicesException("Something went wrong while executing query. Visit error_log for details.", 4012005, 'dbservices.execute.unknownError');
         }
     }
 
@@ -522,10 +518,10 @@ class Database
     public function beginTransaction(): bool
     {
         if (empty(self::$connection)) {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003001, 'dbservices.transaction.connectionNotEstablished');
         }
         if ($this->hasActiveTransactions()) {
-            throw new DbServicesException("Transaction already in progress.", 4003001, 'dbservices.transactionAlreadyInProgress');
+            throw new DbServicesException("Transaction already in progress.", 4003002, 'dbservices.transaction.alreadyInProgress');
         }
         return self::$connection->beginTransaction();
     }
@@ -540,10 +536,10 @@ class Database
     public function commit(): bool
     {
         if (!$this->checkConnection()) {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003003, 'dbservices.transaction.connectionNotEstablished.2');
         }
         if (!self::$connection->inTransaction()) {
-            throw new DbServicesException("Transaction not in progress.", 4004001, 'dbservices.transactionNotInProgress');
+            throw new DbServicesException("Transaction not in progress.", 4003004, 'dbservices.transaction.notInProgress');
         }
         return self::$connection->commit();
     }
@@ -558,10 +554,10 @@ class Database
     public function rollback(): bool
     {
         if (!$this->checkConnection()) {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003005, 'dbservices.transaction.connectionNotEstablished.3');
         }
         if (!self::$connection->inTransaction()) {
-            throw new DbServicesException("Transaction not in progress.", 4004001, 'dbservices.transactionNotInProgress');
+            throw new DbServicesException("Transaction not in progress.", 4003006, 'dbservices.transaction.notInProgress.2');
         }
         return self::$connection->rollBack();
     }
@@ -575,7 +571,7 @@ class Database
     public function hasActiveTransactions(): bool
     {
         if (!$this->checkConnection()) {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003007, 'dbservices.transaction.connectionNotEstablished.4');
         }
         return self::$connection->inTransaction();
     }
@@ -590,7 +586,7 @@ class Database
     public function lastInsertId(): string
     {
         if (!$this->checkConnection()) {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003008, 'dbservices.transaction.connectionNotEstablished.5');
         }
         return self::$connection->lastInsertId();
     }
@@ -607,7 +603,7 @@ class Database
         if ($this->queryExecutionStatus) {
             return $this->queryStatement->rowCount();
         }
-        throw new DbServicesException("No executed statement to fetch results", 4013001, 'dbservices.noExecutedStatement');
+        throw new DbServicesException("No executed statement to fetch results", 4013001, 'dbservices.fetch.noExecutedStatement');
     }
 
 
@@ -640,7 +636,7 @@ class Database
                 $this->handleFetch($exception);
             }
         }
-        throw new DbServicesException("No executed statement to fetch results", 4013001, 'dbservices.noExecutedStatement');
+        throw new DbServicesException("No executed statement to fetch results", 4013002, 'dbservices.fetch.noExecutedStatement.2');
     }
 
 
@@ -660,7 +656,7 @@ class Database
                 $this->handleFetch($exception);
             }
         }
-        throw new DbServicesException("No executed statement to fetch results", 4014001, 'dbservices.noExecutedStatement');
+        throw new DbServicesException("No executed statement to fetch results", 4013003, 'dbservices.fetch.noExecutedStatement.3');
     }
 
 
@@ -671,27 +667,29 @@ class Database
      */
     private function handleFetch(PDOException $exception): void
     {
-        if ($exception->getCode() == 22001) {
-            throw new DbServicesException("Data too long fetch.", 4015001, 'dbservices.dataTooLong');
-        } elseif ($exception->getCode() == 22002) {
-            throw new DbServicesException(" Indicator variable required but not supplied.", 4016001, 'dbservices.indicatorVariableRequired');
-        } elseif ($exception->getCode() == 23003) {
-            throw new DbServicesException("Numeric value out of range.", 4017001, 'dbservices.numericValueOutOfRange');
-        } elseif ($exception->getCode() == 23004) {
-            throw new DbServicesException("Null value not allowed.", 4018001, 'dbservices.nullValueNotAllowed');
-        } elseif ($exception->getCode() == 23005) {
-            throw new DbServicesException("Error in assignment.", 4019001, 'dbservices.errorInAssignment');
-        } elseif ($exception->getCode() == 23007) {
-            throw new DbServicesException("Invalid datetime format.", 4020001, 'dbservices.invalidDateTimeFormat');
-        } elseif ($exception->getCode() == 22008) {
-            throw new DbServicesException("Datetime field overflow", 4021001, 'dbservices.datetimeFieldOverflow');
-        } elseif ($exception->getCode() == 22012) {
-            throw new DbServicesException("Divisible by zero.", 4022001, 'dbservices.divisibleByZero');
-        } elseif ($exception->getCode() == 22018) {
-            throw new DbServicesException("Invalid character value for cast.", 4023001, 'dbservices.invalidCharacterValue');
-        } else {
-            error_log("The exception caught is " . json_encode($exception) . ". New Code: 4042001 (4M42K1)");
-            throw new DbServicesException("Unknown error occurred during fetching results. Visit error_log for details.", 4042001, 'dbservices.unknownError');
+
+        switch ($exception->getCode()) {
+            case 22001:
+                throw new DbServicesException("Data too long fetch.", 4025003, 'dbservices.fetch.dataTooLong');
+            case 22002:
+                throw new DbServicesException("Indicator variable required but not supplied.", 4015006, 'dbservices.fetch.indicatorVariableRequired');
+            case 22003:
+                throw new DbServicesException("Numeric value out of range.", 4016006, 'dbservices.fetch.numericValueOutOfRange');
+            case 22004:
+                throw new DbServicesException("Null value not allowed.", 4019006, 'dbservices.fetch.nullValueNotAllowed');
+            case 22005:
+                throw new DbServicesException("Error in assignment.", 4015007, 'dbservices.fetch.errorInAssignment');
+            case 22007:
+                throw new DbServicesException("Invalid datetime format.", 4016007, 'dbservices.fetch.invalidDateTimeFormat');
+            case 22008:
+                throw new DbServicesException("Datetime field overflow", 4016008, 'dbservices.fetch.datetimeFieldOverflow');
+            case 22012:
+                throw new DbServicesException("Divisible by zero.", 4013004, 'dbservices.fetch.divisibleByZero');
+            case 22018:
+                throw new DbServicesException("Invalid character value for cast.", 4016009, 'dbservices.fetch.invalidCharacterValue');
+            default:
+                error_log("PDOException in fetch: " . $exception->getMessage() . " - Code: " . $exception->getCode());
+                throw new DbServicesException("Unknown error occurred during fetching results. Visit error_log for details.", 4013005, 'dbservices.fetch.unknownError');
         }
     }
 
@@ -712,7 +710,7 @@ class Database
             self::$connection = null;
             $this->queryExecutionStatus = false;
         } else {
-            throw new DbServicesException("Connection not established.", 4002001, 'dbservices.connectionNotEstablished');
+            throw new DbServicesException("Connection not established.", 4003009, 'dbservices.transaction.connectionNotEstablished.6');
         }
     }
 }

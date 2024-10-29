@@ -2,7 +2,7 @@
 
 namespace NGFramer\NGFramerPHPDbServices\Exceptions;
 
-use NGFramer\NGFramerPHPExceptions\exceptions\BaseException;
+use NGFramer\NGFramerPHPExceptions\Exceptions\BaseException;
 use Throwable;
 
 class DbServicesException extends BaseException

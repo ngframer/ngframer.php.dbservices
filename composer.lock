@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "ngframer/ngframer.php.exceptions",
-            "version": "v2.0.3",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ngframer/ngframer.php.exceptions.git",
-                "reference": "1519f2aa0b89ddaae30252fd52262594f0a8217f"
+                "reference": "51f7db9c748b66c7140a5c7cc7760c169627742a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/1519f2aa0b89ddaae30252fd52262594f0a8217f",
-                "reference": "1519f2aa0b89ddaae30252fd52262594f0a8217f",
+                "url": "https://api.github.com/repos/ngframer/ngframer.php.exceptions/zipball/51f7db9c748b66c7140a5c7cc7760c169627742a",
+                "reference": "51f7db9c748b66c7140a5c7cc7760c169627742a",
                 "shasum": ""
             },
             "require": {
@@ -50,9 +50,9 @@
             "description": "Exception and Exception handler for all the NGFramer projects and mostly used Exceptions and Exception handlers.",
             "support": {
                 "issues": "https://github.com/ngframer/ngframer.php.exceptions/issues",
-                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v2.0.3"
+                "source": "https://github.com/ngframer/ngframer.php.exceptions/tree/v2.1.0"
             },
-            "time": "2024-10-27T10:09:19+00:00"
+            "time": "2024-10-29T10:46:13+00:00"
         }
     ],
     "packages-dev": [],

@@ -2,7 +2,7 @@
 
 namespace NGFramer\NGFramerPHPDbServices;
 
-use NGFramer\NGFramerPHPExceptions\exceptions\BaseException;
+use NGFramer\NGFramerPHPExceptions\Exceptions\BaseException;
 use PDO;
 use Exception;
 use PDOException;
@@ -93,12 +93,12 @@ class Database
             ];
 
             // Check if the DatabaseConfig class exists or not.
-            if (!class_exists('app\config\DatabaseConfig')) {
+            if (!class_exists('App\Config\DatabaseConfig')) {
                 throw new DbServicesException("The class app/config/DatabaseConfig doesn't exist.", 4001001, 'dbservices.config.classNotFound');
             }
 
             // Check if the get method exists or not.
-            if (!method_exists('app\config\DatabaseConfig', 'get')) {
+            if (!method_exists('App\Config\DatabaseConfig', 'get')) {
                 throw new DbServicesException("Requested methods are not available on the class.", 4001002, 'dbservices.config.methodNotFound');
             }
 
